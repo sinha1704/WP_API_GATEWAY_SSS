@@ -698,6 +698,7 @@ export function renderDashboardHtml(): string {
       <section class="panel">
         <div class="tab-bar">
           <div class="tab-btn active" onclick="activateTab('pane-telemetry', this)">📈 Real-Time Telemetry</div>
+          <div class="tab-btn" style="color: var(--accent); font-weight: 600;" onclick="activateTab('pane-pair', this)">➕ Link New WhatsApp (QR / Code)</div>
           <div class="tab-btn" onclick="activateTab('pane-erp', this)">Database ERP Query</div>
           <div class="tab-btn" onclick="activateTab('pane-voice', this)">Audio Voice Synthesizer</div>
           <div class="tab-btn" onclick="activateTab('pane-guard', this)">Security & Anti-Abuse</div>
@@ -729,6 +730,74 @@ export function renderDashboardHtml(): string {
             <div style="background: var(--bg-base); padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
               <div class="metric-label">Uptime Counter</div>
               <div id="lbl-uptime-sec" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">-- s</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: LINK NEW WHATSAPP ACCOUNT (DIRECT WORKSPACE) -->
+        <div id="pane-pair" class="tab-pane">
+          <div style="margin-bottom: 16px;">
+            <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Link Another WhatsApp Account (Multi-Device Engine)</h3>
+            <p style="font-size: 12px; color: var(--text-muted);">
+              Run multiple WhatsApp numbers on a single gateway instance. Choose your connection method below:
+            </p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Option A: Instant QR Code Scan -->
+            <div style="background: var(--bg-base); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="font-weight: 600; font-size: 13px; color: var(--accent);">Method 1: Scan QR Code</span>
+                  <span class="brand-tag">Recommended</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
+                  Open WhatsApp on your phone &rarr; <b>Linked Devices</b> &rarr; <b>Link a Device</b> &rarr; Point your camera at the QR code.
+                </p>
+                <div style="margin-bottom: 12px;">
+                  <label class="field-lbl">New Account Node Name:</label>
+                  <input type="text" id="direct-qr-session-id" class="ctrl-input ctrl-mono" readonly style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
+                </div>
+              </div>
+              <button id="btn-start-qr-direct" class="btn-act btn-primary" style="width: 100%; padding: 9px;" onclick="startDirectQrPairing()">
+                Generate QR Code for Next Account
+              </button>
+            </div>
+
+            <!-- Option B: 8-Digit Phone Pairing Code -->
+            <div style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">Method 2: 8-Digit Pairing Code</span>
+                  <span class="brand-tag">No Camera Needed</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
+                  Receive an 8-character verification code to type directly inside WhatsApp (Linked Devices &rarr; Link with phone number).
+                </p>
+                <div style="margin-bottom: 12px;">
+                  <label class="field-lbl">Target Phone (Country code + Phone number):</label>
+                  <input type="text" id="direct-phone-input" class="ctrl-input ctrl-mono" placeholder="e.g. 919876543210 (no spaces or +)">
+                </div>
+              </div>
+              <button id="btn-start-phone-direct" class="btn-act btn-outline" style="width: 100%; padding: 9px;" onclick="startDirectPhonePairing()">
+                Generate 8-Digit Pairing Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Pairing Status & Live Display Box -->
+          <div id="pair-display-card" style="display: none; background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 20px; text-align: center;">
+            <div id="pair-display-header" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
+              Pairing Session: <span id="pair-display-id" style="color: var(--accent); font-family: var(--font-mono);"></span>
+            </div>
+            
+            <div id="pair-display-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px;">
+              <span style="color: var(--text-muted); font-size: 12px;">Generating code...</span>
+            </div>
+
+            <div style="margin-top: 14px; display: flex; justify-content: center; gap: 10px;">
+              <button class="btn-act btn-outline" style="font-size: 11.5px;" onclick="refreshActiveSession()">Check Status</button>
+              <button class="btn-act btn-danger" style="font-size: 11.5px;" onclick="cancelPairingDisplay()">Close / Dismiss</button>
             </div>
           </div>
         </div>
@@ -869,8 +938,27 @@ export function renderDashboardHtml(): string {
     // Modal controls: Dynamically auto-generates next session number (e.g. session-2, session-3)
     let cachedSessionList = [];
 
+    function calculateNextSessionId() {
+      let maxNum = 0;
+      cachedSessionList.forEach(s => {
+        const match = s.id && s.id.match(/^session-(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      return 'session-' + (maxNum + 1);
+    }
+
+    function updateNextSessionInputs() {
+      const nextId = calculateNextSessionId();
+      const modalInp = document.getElementById('new-session-id');
+      if (modalInp) modalInp.value = nextId;
+      const directQrInp = document.getElementById('direct-qr-session-id');
+      if (directQrInp) directQrInp.value = nextId;
+    }
+
     async function openNewSessionModal() {
-      // 1. Fetch fresh list from server to guarantee accuracy
       try {
         const res = await fetch('/api/sessions');
         if (res.ok) {
@@ -881,23 +969,161 @@ export function renderDashboardHtml(): string {
         console.debug('Failed to fetch sessions before modal open', err);
       }
 
-      // 2. Scan existing session IDs
-      let maxNum = 0;
-      cachedSessionList.forEach(s => {
-        const match = s.id && s.id.match(/^session-(\d+)$/i);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > maxNum) maxNum = num;
-        }
-      });
-
-      // Next session ID is strictly sequential (session-1 if empty, session-2 if session-1 exists, etc.)
-      const nextSessionId = 'session-' + (maxNum + 1);
-      
-      const inputEl = document.getElementById('new-session-id');
-      inputEl.value = nextSessionId;
+      updateNextSessionInputs();
       document.getElementById('new-session-modal').style.display = 'flex';
       document.getElementById('new-session-prompt').focus();
+    }
+
+    // Direct QR Code Pairing without confusing modal
+    let pairPollTimer = null;
+
+    async function startDirectQrPairing() {
+      const nextId = calculateNextSessionId();
+      const btn = document.getElementById('btn-start-qr-direct');
+      const card = document.getElementById('pair-display-card');
+      const pairIdSpan = document.getElementById('pair-display-id');
+      const content = document.getElementById('pair-display-content');
+
+      btn.disabled = true;
+      btn.innerText = 'Initializing ' + nextId + '...';
+      card.style.display = 'block';
+      pairIdSpan.innerText = nextId;
+      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Generating WhatsApp QR Code for <b>' + nextId + '</b>...</div>';
+
+      try {
+        await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: nextId, aiEnabled: true })
+        });
+
+        activeSessionId = nextId;
+        await refreshSessionList();
+        updateNextSessionInputs();
+
+        // Render live QR Code directly in the display card
+        content.innerHTML = \`
+          <div style="background: #ffffff; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: inline-block; margin-bottom: 12px;">
+            <img src="/api/sessions/\${nextId}/qr?format=svg&t=\${Date.now()}" alt="Scan QR Code" style="width: 220px; height: 220px; display: block;">
+          </div>
+          <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Point WhatsApp Camera at this QR Code</div>
+          <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
+        \`;
+
+        // Poll for connection
+        if (pairPollTimer) clearInterval(pairPollTimer);
+        pairPollTimer = setInterval(async () => {
+          try {
+            const stRes = await fetch('/api/sessions/' + nextId + '/status');
+            if (stRes.ok) {
+              const stData = await stRes.json();
+              if (stData.status === 'CONNECTED') {
+                clearInterval(pairPollTimer);
+                content.innerHTML = \`
+                  <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
+                    ✓ WhatsApp Account Successfully Linked!
+                    <div style="font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 6px;">
+                      Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
+                    </div>
+                  </div>
+                \`;
+                await refreshSessionList();
+                await loadActiveSessionDetails();
+              }
+            }
+          } catch (e) {}
+        }, 3000);
+
+      } catch (err) {
+        content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start QR pairing: ' + err.message + '</div>';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Generate QR Code for Next Account';
+      }
+    }
+
+    // Direct Phone Number 8-Digit Pairing Code
+    async function startDirectPhonePairing() {
+      const phoneInput = document.getElementById('direct-phone-input');
+      const phone = phoneInput.value.replace(/\\D/g, '');
+      if (!phone || phone.length < 8) {
+        alert('Please enter a valid phone number with country code (e.g. 919876543210)');
+        phoneInput.focus();
+        return;
+      }
+
+      const nextId = calculateNextSessionId();
+      const btn = document.getElementById('btn-start-phone-direct');
+      const card = document.getElementById('pair-display-card');
+      const pairIdSpan = document.getElementById('pair-display-id');
+      const content = document.getElementById('pair-display-content');
+
+      btn.disabled = true;
+      btn.innerText = 'Requesting 8-digit code...';
+      card.style.display = 'block';
+      pairIdSpan.innerText = nextId;
+      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers for 8-digit code for +' + phone + '...</div>';
+
+      try {
+        await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: nextId, phoneNumber: phone, aiEnabled: true })
+        });
+
+        activeSessionId = nextId;
+        await refreshSessionList();
+        updateNextSessionInputs();
+
+        // Poll for pairing code
+        let attempts = 0;
+        if (pairPollTimer) clearInterval(pairPollTimer);
+        pairPollTimer = setInterval(async () => {
+          attempts++;
+          try {
+            const stRes = await fetch('/api/sessions/' + nextId + '/status');
+            if (stRes.ok) {
+              const stData = await stRes.json();
+              if (stData.status === 'CONNECTED') {
+                clearInterval(pairPollTimer);
+                content.innerHTML = \`
+                  <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
+                    ✓ WhatsApp Account Successfully Linked!
+                  </div>
+                \`;
+                await refreshSessionList();
+                await loadActiveSessionDetails();
+                return;
+              }
+              if (stData.pairingCode) {
+                content.innerHTML = \`
+                  <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Enter this 8-character code on your phone:</div>
+                  <div style="font-family: var(--font-mono); font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #10b981; background: #061912; border: 1px solid #10b981; padding: 12px 24px; border-radius: 6px; display: inline-block;">
+                    \${stData.pairingCode}
+                  </div>
+                  <div style="color: var(--text-secondary); font-size: 11.5px; margin-top: 10px;">
+                    Open WhatsApp &rarr; <b>Linked Devices</b> &rarr; <b>Link with phone number instead</b> &rarr; type code above.
+                  </div>
+                \`;
+              }
+            }
+          } catch (e) {}
+          if (attempts > 30) {
+            clearInterval(pairPollTimer);
+          }
+        }, 2000);
+
+      } catch (err) {
+        content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start pairing code: ' + err.message + '</div>';
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Generate 8-Digit Pairing Code';
+      }
+    }
+
+    function cancelPairingDisplay() {
+      if (pairPollTimer) clearInterval(pairPollTimer);
+      document.getElementById('pair-display-card').style.display = 'none';
     }
 
     function closeNewSessionModal() {
@@ -960,6 +1186,7 @@ export function renderDashboardHtml(): string {
         const data = await res.json();
         const list = data.sessions || [];
         cachedSessionList = list;
+        updateNextSessionInputs();
 
         document.getElementById('metric-node-count').innerText = list.length + ' Nodes';
         const connected = list.filter(s => s.status === 'CONNECTED').length;
