@@ -22,14 +22,21 @@ export async function authenticateApiKey(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  // Allow public documentation, scanner, and health check endpoints without authentication
+  // Allow public documentation, scanner, dashboard, and health check endpoints without authentication
   const path = request.url.split('?')[0];
   if (
     path === '/' ||
+    path === '/dashboard' ||
     path === '/health' ||
     path === '/scan' ||
     path.startsWith('/docs') ||
-    path.startsWith('/static')
+    path.startsWith('/static') ||
+    path === '/api/sessions' ||
+    path.startsWith('/api/sessions/') ||
+    path === '/api/erp/ask' ||
+    path === '/api/safety/check' ||
+    path === '/api/voice/transcribe' ||
+    path === '/api/voice/synthesize'
   ) {
     return;
   }

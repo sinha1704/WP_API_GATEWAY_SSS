@@ -30,6 +30,8 @@ const envSchema = z.object({
   TTS_PROVIDER: z.enum(['google', 'openai', 'elevenlabs']).default('google'),
   ELEVENLABS_API_KEY: z.string().optional().default(''),
   GROQ_API_KEY: z.string().optional().default(''),
+  GROQ_MODEL: z.string().default('openai/gpt-oss-20b'),
+  GROQ_WHISPER_MODEL: z.string().default('whisper-large-v3'),
   LOCAL_WHISPER_URL: z.string().optional().default('http://localhost:8000/v1/audio/transcriptions'),
   // ERP / Database Query Config
   ERP_QUERY_ENABLED: z.coerce.boolean().default(true),

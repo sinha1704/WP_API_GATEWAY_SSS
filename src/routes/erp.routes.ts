@@ -239,4 +239,58 @@ export async function erpRoutes(fastify: FastifyInstance) {
       return reply.send(res);
     }
   );
+
+  /**
+   * 6. Live Safety & Security Guardrail Tester (for UI Dashboard)
+   */
+  fastify.post(
+    '/api/safety/check',
+    {
+      schema: {
+        description: 'Test text against anti-abuse and confidential data leakage guardrails',
+        tags: ['Voice & ERP AI'],
+        body: z.object({
+          text: z.string().min(1),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { text } = request.body as { text: string };
+      const { aiBridgeService } = await import('../services/ai.service.js');
+      const interceptedResponse = aiBridgeService.filterSensitiveOrAbusiveInput(text);
+
+      return reply.send({
+        success: true,
+        inputText: text,
+        isBlockedOrFlagged: Boolean(interceptedResponse),
+        safetyResponse: interceptedResponse || 'Passed all safety checks (Clean & Authorized)',
+      });
+    }
+  );
+
+  /**
+   * 7. Synthesize Speech Audio Endpoint (Generates WhatsApp Opus audio for browser playback)
+   */
+  fastify.post(
+    '/api/voice/synthesize',
+    {
+      schema: {
+        description: 'Synthesize text to speech audio note (WhatsApp Opus)',
+        tags: ['Voice & ERP AI'],
+        body: z.object({
+          text: z.string().min(1),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { text } = request.body as { text: string };
+      try {
+        const speech = await voiceTranscriptionService.synthesizeSpeech(text);
+        reply.header('Content-Type', speech.mimetype);
+        return reply.send(speech.buffer);
+      } catch (err: any) {
+        return reply.status(500).send({ success: false, error: err.message });
+      }
+    }
+  );
 }

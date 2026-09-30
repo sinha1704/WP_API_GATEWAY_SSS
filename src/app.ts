@@ -18,6 +18,7 @@ import { sessionRoutes } from './routes/session.routes.js';
 import { messageRoutes } from './routes/message.routes.js';
 import { aiRoutes } from './routes/ai.routes.js';
 import { erpRoutes } from './routes/erp.routes.js';
+import { renderDashboardHtml } from './views/dashboard.view.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -102,37 +103,11 @@ export async function buildApp() {
   });
 
   app.get('/', async (request, reply) => {
-    return reply.type('text/html').send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>WhatsApp API Gateway</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b141a; color: #e9edef; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-            .card { background: #111b21; border: 1px solid #202c33; padding: 2.5rem; border-radius: 14px; max-width: 520px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
-            h1 { color: #00a884; margin-top: 0; font-size: 1.8rem; }
-            p { color: #8696a0; line-height: 1.6; font-size: 0.95rem; }
-            .actions { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
-            .btn { display: inline-block; padding: 12px 24px; background: #00a884; color: #111b21; text-decoration: none; border-radius: 8px; font-weight: 700; transition: opacity 0.2s; }
-            .btn:hover { opacity: 0.9; }
-            .btn-secondary { background: #202c33; color: #00a884; border: 1px solid #00a884; }
-            .badge { background: #202c33; color: #25d366; padding: 4px 10px; border-radius: 6px; font-size: 0.85rem; font-family: monospace; font-weight: 600; }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <h1>WhatsApp API Gateway</h1>
-            <p>Production self-hosted WhatsApp API Gateway with multi-device Baileys, Anti-Ban queues, and AI bot integration.</p>
-            <p>Status: <span class="badge">ONLINE</span></p>
-            <div class="actions">
-              <a href="/scan" class="btn">📱 Open QR Scanner UI</a>
-              <a href="/docs" class="btn btn-secondary">📖 Swagger API Docs</a>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
+    return reply.type('text/html').send(renderDashboardHtml());
+  });
+
+  app.get('/dashboard', async (request, reply) => {
+    return reply.type('text/html').send(renderDashboardHtml());
   });
 
   // Dedicated QR Code Scanner Dashboard
