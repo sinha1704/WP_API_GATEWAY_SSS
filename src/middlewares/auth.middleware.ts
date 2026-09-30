@@ -35,6 +35,7 @@ export async function authenticateApiKey(
     path.startsWith('/api/sessions/') ||
     path === '/api/erp/ask' ||
     path === '/api/safety/check' ||
+    path === '/api/telemetry' ||
     path === '/api/voice/transcribe' ||
     path === '/api/voice/synthesize'
   ) {

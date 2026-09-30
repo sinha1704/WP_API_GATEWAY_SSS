@@ -92,13 +92,60 @@ export async function buildApp() {
   // Centralized Authentication Hook
   app.addHook('preHandler', authenticateApiKey);
 
-  // Health and root endpoint
+  // In-memory rolling telemetry buffer (retains last 30 data points for live charting)
+  const telemetryHistory: Array<{
+    time: string;
+    rssMb: number;
+    heapUsedMb: number;
+    heapTotalMb: number;
+    uptimeSec: number;
+  }> = [];
+
+  const recordTelemetry = () => {
+    const mem = process.memoryUsage();
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    telemetryHistory.push({
+      time: timeStr,
+      rssMb: Math.round((mem.rss / 1024 / 1024) * 10) / 10,
+      heapUsedMb: Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10,
+      heapTotalMb: Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10,
+      uptimeSec: Math.floor(process.uptime()),
+    });
+    if (telemetryHistory.length > 30) {
+      telemetryHistory.shift();
+    }
+  };
+
+  // Record initial points
+  for (let i = 0; i < 5; i++) {
+    recordTelemetry();
+  }
+  setInterval(recordTelemetry, 3000);
+
+  // Health and telemetry endpoints
   app.get('/health', async () => {
+    const mem = process.memoryUsage();
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      memory: process.memoryUsage(),
+      memory: {
+        rss: mem.rss,
+        heapTotal: mem.heapTotal,
+        heapUsed: mem.heapUsed,
+        external: mem.external,
+        rssMb: Math.round((mem.rss / 1024 / 1024) * 10) / 10,
+        heapUsedMb: Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10,
+      },
+    };
+  });
+
+  app.get('/api/telemetry', async () => {
+    return {
+      success: true,
+      history: telemetryHistory,
+      current: telemetryHistory[telemetryHistory.length - 1] || null,
     };
   });
 
