@@ -32,6 +32,7 @@ export async function authenticateApiKey(
     path.startsWith('/docs') ||
     path.startsWith('/static') ||
     path === '/api/sessions' ||
+    path === '/api/sessions/start' ||
     path.startsWith('/api/sessions/') ||
     path === '/api/erp/ask' ||
     path === '/api/safety/check' ||
