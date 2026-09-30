@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: whatsapp-api-gateway
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: NODE_ENV
+        value: production
+      - key: MASTER_API_KEY
+        value: master_secret_key_whatsapp_gateway_2026
+      - key: AI_BRIDGE_ENABLED
+        value: "true"
+      - key: AI_PROVIDER
+        value: gemini
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: VOICE_QUERY_ENABLED
+        value: "true"
+      - key: ERP_QUERY_ENABLED
+        value: "true"
+      - key: PRESENCE_MIN_DELAY_MS
+        value: "1500"
+      - key: PRESENCE_MAX_DELAY_MS
+        value: "3000"
