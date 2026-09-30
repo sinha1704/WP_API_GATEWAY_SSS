@@ -21,8 +21,7 @@ Table: products
   - sku: VARCHAR(50) (Unique product code e.g. 'PRD-001')
   - name: VARCHAR(255) (Product name e.g. 'Wireless Mouse', 'Mechanical Keyboard')
   - category: VARCHAR(100) (e.g. 'Electronics', 'Stationery', 'Office')
-  - unit_price: NUMERIC(10,2) (Selling price per unit)
-  - cost_price: NUMERIC(10,2) (Procurement cost)
+  - unit_price: NUMERIC(10,2) (Selling retail price per unit)
   - stock_quantity: INT (Current inventory units on hand)
   - reorder_level: INT (Minimum safety stock before replenishment)
   - is_active: BOOLEAN (True if currently active)
@@ -62,11 +61,17 @@ const MOCK_SALES_ORDERS = [
 ];
 
 export class DatabaseSecurityGuard {
-  // Disallowed dangerous keywords
+    // Disallowed dangerous keywords
   private static FORBIDDEN_KEYWORDS = [
     'INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'TRUNCATE',
     'CREATE', 'RENAME', 'GRANT', 'REVOKE', 'EXEC', 'EXECUTE',
     'COPY', 'VACUUM', 'REINDEX', 'CALL', 'COMMENT', 'SECURITY'
+  ];
+
+  // Block queries trying to read passwords, tokens, credentials, or internal profit costs
+  private static SENSITIVE_COLUMN_PATTERNS = [
+    'PASSWORD', 'SECRET', 'TOKEN', 'CREDENTIAL', 'PG_SHADOW', 'PG_AUTHID',
+    'PG_USER', 'PG_DATABASE', 'COST_PRICE', 'PROFIT_MARGIN'
   ];
 
   /**
@@ -74,6 +79,7 @@ export class DatabaseSecurityGuard {
    * 1. Query must start with SELECT or WITH (common table expressions)
    * 2. Must not contain mutative/DDL keywords
    * 3. Multiple statements separated by semicolon (SQL injection vector) are blocked
+   * 4. Must not access internal sensitive columns or auth tables
    */
   public static validateReadOnlyQuery(sql: string): { valid: boolean; reason?: string } {
     const trimmed = sql.trim().replace(/^;+|;+$/g, '');
@@ -95,6 +101,13 @@ export class DatabaseSecurityGuard {
     for (const forbidden of this.FORBIDDEN_KEYWORDS) {
       if (words.includes(forbidden) || new RegExp(`\\b${forbidden}\\b`, 'i').test(trimmed)) {
         return { valid: false, reason: `Security Guard: Forbidden operation '${forbidden}' detected in SQL` };
+      }
+    }
+
+    // Check for sensitive column/table access attempts
+    for (const sensitive of this.SENSITIVE_COLUMN_PATTERNS) {
+      if (new RegExp(`\\b${sensitive}\\b`, 'i').test(trimmed)) {
+        return { valid: false, reason: `Security Guard: Access to confidential system data or internal cost columns is blocked` };
       }
     }
 
