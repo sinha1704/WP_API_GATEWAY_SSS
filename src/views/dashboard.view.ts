@@ -820,6 +820,12 @@ export function renderDashboardHtml(): string {
       </div>
 
       <div style="margin-bottom: 12px;">
+        <label class="field-lbl" for="new-session-phone">Phone Number to Link (Optional - for 8-Digit Pairing Code):</label>
+        <input type="text" id="new-session-phone" class="ctrl-input ctrl-mono" placeholder="e.g. 919382468250 (country code + number)">
+        <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Leave empty to pair via QR Code scanning instead.</span>
+      </div>
+
+      <div style="margin-bottom: 12px;">
         <label class="field-lbl" for="new-session-prompt">Optional System Persona / Prompt for this Node:</label>
         <textarea id="new-session-prompt" class="ctrl-input" placeholder="e.g. You are a senior support agent handling customer order inquiries..."></textarea>
       </div>
@@ -897,11 +903,13 @@ export function renderDashboardHtml(): string {
     function closeNewSessionModal() {
       document.getElementById('new-session-modal').style.display = 'none';
       document.getElementById('new-session-id').value = '';
+      document.getElementById('new-session-phone').value = '';
       document.getElementById('new-session-prompt').value = '';
     }
 
     async function createWhatsAppSession() {
       const id = document.getElementById('new-session-id').value.trim();
+      const phone = document.getElementById('new-session-phone').value.trim();
       const prompt = document.getElementById('new-session-prompt').value.trim();
       if (!id) {
         alert('Please enter a session identifier');
@@ -918,6 +926,7 @@ export function renderDashboardHtml(): string {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             sessionId: id,
+            phoneNumber: phone || undefined,
             aiEnabled: true,
             aiPrompt: prompt || undefined
           })
@@ -1023,11 +1032,15 @@ export function renderDashboardHtml(): string {
           dot.className = 'dot';
           statusLbl.innerText = data.status || 'Disconnected';
           statusLbl.style.color = 'var(--warning)';
-          phoneLbl.innerText = 'Waiting for scan';
+          phoneLbl.innerText = 'Waiting for scan/code';
 
-          qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=svg&t=' + Date.now();
-          qrImg.style.display = 'block';
-          qrMsg.style.display = 'none';
+          if (data.pairingCode) {
+            qrFrame.innerHTML = '<div style="color: #12161b; text-align: center; padding: 20px;"><div style="font-size: 11px; color: #5e6d7d; margin-bottom: 6px; font-weight: 500;">Enter Code on Phone:</div><div style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: 4px; color: #059669; background: #ecfdf5; padding: 8px 12px; border-radius: 4px; border: 1px solid #10b981;">' + data.pairingCode + '</div><div style="font-size: 10px; color: #5e6d7d; margin-top: 8px;">WhatsApp > Linked Devices > Link with phone number</div></div>';
+          } else {
+            qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=svg&t=' + Date.now();
+            qrImg.style.display = 'block';
+            qrMsg.style.display = 'none';
+          }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }
       } catch (err) {

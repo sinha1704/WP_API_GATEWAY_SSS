@@ -32,6 +32,7 @@ export interface SessionInstance {
   qrCodeRaw?: string;
   qrCodeDataUrl?: string;
   qrCodeSvg?: string;
+  pairingCode?: string;
   reconnectAttempts: number;
   webhookUrl?: string;
   webhookSecret?: string;
@@ -127,6 +128,7 @@ export class SessionManager {
       aiPrompt?: string;
       voiceQueryEnabled?: boolean;
       erpQueryEnabled?: boolean;
+      phoneNumber?: string;
     }
   ): Promise<SessionInstance> {
     const existing = this.sessions.get(sessionId);
@@ -169,6 +171,20 @@ export class SessionManager {
     });
 
     sessionInstance.socket = socket;
+
+    // Pairing code logic for direct phone number connection
+    if (options?.phoneNumber && !state.creds.registered) {
+      setTimeout(async () => {
+        try {
+          const cleanPhone = options.phoneNumber!.replace(/\D/g, '');
+          const code = await socket.requestPairingCode(cleanPhone);
+          sessionInstance.pairingCode = code;
+          logger.info(`[Session: ${sessionId}] WhatsApp Pairing Code for ${cleanPhone}: ${code}`);
+        } catch (codeErr: any) {
+          logger.error({ err: codeErr.message }, 'Failed to generate WhatsApp pairing code');
+        }
+      }, 3000);
+    }
 
     // Listen to credentials update
     socket.ev.on('creds.update', saveCreds);

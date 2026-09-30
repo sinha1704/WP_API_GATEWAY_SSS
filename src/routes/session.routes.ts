@@ -20,6 +20,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
           webhookSecret: z.string().optional().describe('Secret used to sign outbound webhooks'),
           aiEnabled: z.boolean().optional().describe('Enable automated AI replies for incoming chats'),
           aiPrompt: z.string().optional().describe('Custom system prompt for AI chatbot'),
+          phoneNumber: z.string().optional().describe('Target phone number for Pairing Code link'),
         }),
         response: {
           200: z.object({
@@ -38,6 +39,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         webhookSecret?: string;
         aiEnabled?: boolean;
         aiPrompt?: string;
+        phoneNumber?: string;
       };
 
       const session = await sessionManager.initSession(body.sessionId, {
@@ -45,6 +47,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         webhookSecret: body.webhookSecret,
         aiEnabled: body.aiEnabled,
         aiPrompt: body.aiPrompt,
+        phoneNumber: body.phoneNumber,
       });
 
       return reply.send({
@@ -118,6 +121,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
               })
               .optional(),
             hasQrCode: z.boolean(),
+            pairingCode: z.string().optional(),
           }),
           404: z.object({
             success: z.boolean(),
@@ -143,6 +147,7 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         status: session.status,
         user: session.user,
         hasQrCode: Boolean(session.qrCodeRaw),
+        pairingCode: session.pairingCode,
       });
     }
   );
