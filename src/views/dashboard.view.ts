@@ -812,14 +812,15 @@ export function renderDashboardHtml(): string {
         <button class="btn-act btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="closeNewSessionModal()">✕</button>
       </div>
 
-      <div style="margin-bottom: 10px;">
-        <label class="field-lbl" for="new-session-id">Session Identifier (e.g. sales-desk, support-us, agent-2):</label>
-        <input type="text" id="new-session-id" class="ctrl-input ctrl-mono" placeholder="support-desk-2">
+      <div style="margin-bottom: 12px;">
+        <label class="field-lbl" for="new-session-id">Allocated Session Node (Auto-Generated & Protected):</label>
+        <input type="text" id="new-session-id" class="ctrl-input ctrl-mono" readonly style="background: var(--bg-elevated); cursor: not-allowed; color: var(--accent); font-weight: 600;">
+        <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Node IDs are strictly sequential to prevent session key collisions.</span>
       </div>
 
-      <div style="margin-bottom: 10px;">
-        <label class="field-lbl" for="new-session-prompt">Optional System Prompt for this Node:</label>
-        <textarea id="new-session-prompt" class="ctrl-input" placeholder="You are a customer support agent representing..."></textarea>
+      <div style="margin-bottom: 12px;">
+        <label class="field-lbl" for="new-session-prompt">Optional System Persona / Prompt for this Node:</label>
+        <textarea id="new-session-prompt" class="ctrl-input" placeholder="e.g. You are a senior support agent handling customer order inquiries..."></textarea>
       </div>
 
       <div class="modal-actions">
@@ -858,10 +859,26 @@ export function renderDashboardHtml(): string {
       document.getElementById('inp-guard').value = el.innerText.replace(/^[^:]+:\s*/, '').trim();
     }
 
-    // Modal controls
+    // Modal controls: Dynamically auto-generates next session number (e.g. session-2, session-3)
+    let cachedSessionList = [];
+
     function openNewSessionModal() {
+      // Find all existing session numbers like session-1, session-2, etc.
+      let maxNum = 0;
+      cachedSessionList.forEach(s => {
+        const match = s.id && s.id.match(/^session-(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      });
+      // Next session ID is strictly sequential
+      const nextSessionId = 'session-' + (maxNum + 1);
+      
+      const inputEl = document.getElementById('new-session-id');
+      inputEl.value = nextSessionId;
       document.getElementById('new-session-modal').style.display = 'flex';
-      document.getElementById('new-session-id').focus();
+      document.getElementById('new-session-prompt').focus();
     }
 
     function closeNewSessionModal() {
@@ -920,6 +937,7 @@ export function renderDashboardHtml(): string {
         if (!res.ok) return;
         const data = await res.json();
         const list = data.sessions || [];
+        cachedSessionList = list;
 
         document.getElementById('metric-node-count').innerText = list.length + ' Nodes';
         const connected = list.filter(s => s.status === 'CONNECTED').length;
