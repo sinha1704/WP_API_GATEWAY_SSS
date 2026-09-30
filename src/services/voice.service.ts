@@ -5,6 +5,8 @@ import path from 'path';
 import os from 'os';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
+import { Readable } from 'stream';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
@@ -36,24 +38,56 @@ export class VoiceTranscriptionService {
 
     logger.info({ provider, audioSizeBytes: audioBuffer.length, mimetype }, 'Starting audio transcription');
 
-    switch (provider) {
-      case 'groq':
-        return await this.transcribeWithGroq(audioBuffer, filename);
-      case 'openai':
-        return await this.transcribeWithOpenAI(audioBuffer, filename);
-      case 'gemini':
-        return await this.transcribeWithGemini(audioBuffer, mimetype);
-      case 'local_whisper':
-        return await this.transcribeWithLocalWhisper(audioBuffer, filename);
-      default:
-        // Default attempt Groq first if key exists, otherwise fallback to OpenAI or Gemini
-        if (config.GROQ_API_KEY) {
-          return await this.transcribeWithGroq(audioBuffer, filename);
-        } else if (config.AI_API_KEY) {
-          return await this.transcribeWithOpenAI(audioBuffer, filename);
-        }
-        throw new Error(`No transcription provider or API keys configured. Set GROQ_API_KEY or AI_API_KEY in .env`);
+    // 1. If configured provider is explicitly requested and has credentials, try it first
+    if (provider === 'gemini' || config.AI_PROVIDER === 'gemini') {
+      try {
+        const text = await this.transcribeWithGemini(audioBuffer, mimetype);
+        if (text && text.trim()) return text.trim();
+      } catch (geminiErr: any) {
+        logger.warn({ err: geminiErr.message }, 'Gemini transcription attempt failed, checking fallback');
+      }
     }
+
+    if (config.GROQ_API_KEY) {
+      try {
+        const text = await this.transcribeWithGroq(audioBuffer, filename);
+        if (text && text.trim()) return text.trim();
+      } catch (groqErr: any) {
+        logger.warn({ err: groqErr.message }, 'Groq transcription failed, trying next provider');
+      }
+    }
+
+    // 2. Fallback to Gemini if AI_API_KEY is configured
+    if (config.AI_API_KEY && config.AI_PROVIDER === 'gemini') {
+      try {
+        const text = await this.transcribeWithGemini(audioBuffer, mimetype);
+        if (text && text.trim()) return text.trim();
+      } catch (gErr: any) {
+        logger.warn({ err: gErr.message }, 'Gemini transcription fallback failed');
+      }
+    }
+
+    // 3. Fallback to OpenAI if configured
+    if (config.AI_PROVIDER === 'openai' && config.AI_API_KEY) {
+      try {
+        const text = await this.transcribeWithOpenAI(audioBuffer, filename);
+        if (text && text.trim()) return text.trim();
+      } catch (openAiErr: any) {
+        logger.warn({ err: openAiErr.message }, 'OpenAI transcription fallback failed');
+      }
+    }
+
+    // 4. Fallback to local whisper container if configured
+    if (config.LOCAL_WHISPER_URL) {
+      try {
+        const text = await this.transcribeWithLocalWhisper(audioBuffer, filename);
+        if (text && text.trim()) return text.trim();
+      } catch (whisperErr: any) {
+        logger.warn({ err: whisperErr.message }, 'Local Whisper transcription failed');
+      }
+    }
+
+    throw new Error('All configured speech-to-text providers failed or returned empty transcription.');
   }
 
   /**
@@ -139,7 +173,46 @@ export class VoiceTranscriptionService {
   }
 
   /**
+   * Converts any incoming voice audio (OGG/Opus, WAV, etc.) to clean MP3 for cloud transcription engines
+   */
+  public async convertToMp3(inputBuffer: Buffer): Promise<Buffer> {
+    return new Promise((resolve) => {
+      const tempId = `trans_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      const inPath = path.join(os.tmpdir(), `${tempId}_in.ogg`);
+      const outPath = path.join(os.tmpdir(), `${tempId}_out.mp3`);
+
+      try {
+        fs.writeFileSync(inPath, inputBuffer);
+        ffmpeg(inPath)
+          .toFormat('mp3')
+          .audioChannels(1)
+          .audioFrequency(16000)
+          .on('end', () => {
+            try {
+              const converted = fs.readFileSync(outPath);
+              try { fs.unlinkSync(inPath); fs.unlinkSync(outPath); } catch (e) {}
+              resolve(converted);
+            } catch (readErr) {
+              resolve(inputBuffer);
+            }
+          })
+          .on('error', (err) => {
+            logger.warn({ err: err.message }, 'FFmpeg MP3 transcode warning, using raw audio buffer');
+            try { if (fs.existsSync(inPath)) fs.unlinkSync(inPath); } catch (e) {}
+            try { if (fs.existsSync(outPath)) fs.unlinkSync(outPath); } catch (e) {}
+            resolve(inputBuffer);
+          })
+          .save(outPath);
+      } catch (err: any) {
+        logger.warn({ err: err.message }, 'Failed to start MP3 conversion, using raw audio buffer');
+        resolve(inputBuffer);
+      }
+    });
+  }
+
+  /**
    * Google Gemini Multimodal Audio understanding
+   * Transcribes Bengali (বাংলা), Hindi (हिन्दी), Banglish, Hinglish, and English with highest accuracy
    */
   private async transcribeWithGemini(audioBuffer: Buffer, mimetype: string): Promise<string> {
     const apiKey = config.AI_API_KEY;
@@ -147,37 +220,62 @@ export class VoiceTranscriptionService {
       throw new Error('AI_API_KEY is required for Gemini audio processing');
     }
 
-    const base64Audio = audioBuffer.toString('base64');
-    const cleanMime = mimetype.split(';')[0].trim() || 'audio/ogg';
+    // Convert to clean standard MP3 for maximum Gemini audio parser compatibility
+    const mp3Buffer = await this.convertToMp3(audioBuffer);
+    const base64Audio = mp3Buffer.toString('base64');
+    const audioMime = 'audio/mp3';
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const res = await axios.post(
-      url,
-      {
-        contents: [
+    // Prioritize high-availability multimodal Gemini models
+    const candidateModels = [
+      'gemini-3.1-flash-lite',
+      'gemini-flash-lite-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-latest',
+    ];
+
+    for (const model of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const res = await axios.post(
+          url,
           {
-            role: 'user',
-            parts: [
+            contents: [
               {
-                inlineData: {
-                  mimeType: cleanMime,
-                  data: base64Audio,
-                },
-              },
-              {
-                text: 'Transcribe this voice audio message exactly into text. Return ONLY the transcribed text, without any conversational preamble or notes.',
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: audioMime,
+                      data: base64Audio,
+                    },
+                  },
+                  {
+                    text: 'Listen to this voice message very carefully. It is spoken in Bengali (বাংলা), Hindi (हिन्दी), Banglish, or English. Transcribe the spoken words EXACTLY in the same native language and script as spoken. Return ONLY the transcribed text without any other words, prefixes, or explanations.',
+                  },
+                ],
               },
             ],
           },
-        ],
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 30000,
-      }
-    );
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 25000,
+          }
+        );
 
-    return res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        const result = res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (result && result.length > 0) {
+          logger.info({ model, transcribedChars: result.length }, 'Gemini successfully transcribed voice note');
+          return result;
+        }
+      } catch (modelErr: any) {
+        logger.warn(
+          { model, status: modelErr.response?.status, err: modelErr.response?.data?.error?.message || modelErr.message },
+          'Gemini audio model attempt failed, trying fallback model'
+        );
+      }
+    }
+
+    return '';
   }
 
   /**
@@ -194,7 +292,51 @@ export class VoiceTranscriptionService {
 
     logger.info({ ttsProvider: config.TTS_PROVIDER, charCount: cleanText.length }, 'Synthesizing voice audio reply');
 
-    // 1. OpenAI TTS (if API key available and selected)
+    // 1. Natural Neural Human Male Voice Engine (Free, Ultra-realistic, 0% robotic)
+    // Voices: Bengali Male (bn-IN-BashkarNeural), Hindi Male (hi-IN-MadhurNeural), English Male (en-US-ChristopherNeural)
+    if (config.TTS_PROVIDER === 'edge' || config.TTS_PROVIDER === 'msedge') {
+      try {
+        const detectedLang = this.detectTextLanguage(cleanText);
+        let selectedVoice = 'en-US-ChristopherNeural'; // Warm, professional natural male human voice
+        if (detectedLang === 'bn') {
+          selectedVoice = 'bn-IN-BashkarNeural'; // Natural Bengali Male
+        } else if (detectedLang === 'hi') {
+          selectedVoice = 'hi-IN-MadhurNeural'; // Natural Hindi Male
+        } else if (detectedLang === 'ar') {
+          selectedVoice = 'ar-SA-HamedNeural'; // Natural Arabic Male
+      }
+
+      // Transform raw text into human spoken cadence: micro-breaths, pauses, natural filler pacing
+      const conversationalSpeechText = this.humanizeSpeechCadence(cleanText, detectedLang);
+
+      logger.info(
+        { voice: selectedVoice, lang: detectedLang, originalLen: cleanText.length, spokenLen: conversationalSpeechText.length },
+        '🎙️ Synthesizing ultra-natural human male voice with authentic breathing rhythm'
+      );
+
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata(selectedVoice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(conversationalSpeechText);
+
+      const chunks: Buffer[] = [];
+      await new Promise<void>((resolve, reject) => {
+        audioStream.on('data', (chunk: Buffer) => chunks.push(chunk));
+        audioStream.on('end', () => resolve());
+        audioStream.on('error', (err) => reject(err));
+      });
+
+      const rawAudio = Buffer.concat(chunks);
+      if (rawAudio.length > 0) {
+        logger.info({ mp3Bytes: rawAudio.length }, 'Neural Human Voice successfully generated. Transcoding to WhatsApp Opus PTT...');
+        const opusBuffer = await this.convertToWhatsAppOpus(rawAudio);
+        return { buffer: opusBuffer, mimetype: 'audio/ogg; codecs=opus' };
+      }
+    } catch (neuralErr: any) {
+      logger.warn({ err: neuralErr.message }, 'Neural Human Voice synthesis failed, falling back to Google/OpenAI TTS');
+    }
+  }
+
+    // 2. OpenAI TTS (if API key available and selected)
     if (config.TTS_PROVIDER === 'openai' && config.AI_API_KEY) {
       try {
         const res = await axios.post(
@@ -202,7 +344,7 @@ export class VoiceTranscriptionService {
           {
             model: 'tts-1',
             input: cleanText,
-            voice: 'alloy',
+            voice: 'onyx', // Deep, natural human male voice
             response_format: 'mp3',
           },
           {
@@ -214,19 +356,18 @@ export class VoiceTranscriptionService {
             timeout: 20000,
           }
         );
-        return { buffer: Buffer.from(res.data), mimetype: 'audio/mp4' };
+        const opusBuffer = await this.convertToWhatsAppOpus(Buffer.from(res.data));
+        return { buffer: opusBuffer, mimetype: 'audio/ogg; codecs=opus' };
       } catch (err: any) {
         logger.warn({ err: err.message }, 'OpenAI TTS failed, falling back to Google TTS');
       }
     }
 
-    // 2. Google Translate TTS (Free, Instant, chunked for unlimited length)
+    // 3. Google Translate TTS (Fallback)
     try {
-      // Automatically detect if the text is Bengali, Hindi, Arabic, or English for proper accent and voice
       const detectedLang = this.detectTextLanguage(cleanText);
       logger.info({ detectedLang, charCount: cleanText.length }, 'Detected text language for Voice Note playback');
 
-      // Google TTS endpoint limits queries to ~150-180 characters, so chunk into natural sentence parts
       const words = cleanText.split(/\s+/);
       const chunks: string[] = [];
       let currentChunk = '';
@@ -335,14 +476,66 @@ export class VoiceTranscriptionService {
     }
     // Common Banglish / Hinglish markers if written in English alphabet
     const lower = text.toLowerCase();
-    if (/\b(kemon|achen|acchen|ki|korchis|korchen|koto|taka|bhalo|hobe|aache|ache|dhonnobad|namaskar)\b/.test(lower)) {
+    if (
+      /\b(kemon|achen|acchen|ki|korcho|korchis|korchen|koto|taka|bhalo|hobe|aache|ache|dhonnobad|namaskar|amar|khide|payeche|payechen|babu|khabar|kheyecho|tumi|apni|bhai|bolo|dekho|kichu|shuncho)\b/.test(
+        lower
+      )
+    ) {
       return 'bn';
     }
-    if (/\b(namaste|kaise|kya|hai|kitna|bhai|shukriya|aap|hum)\b/.test(lower)) {
+    if (
+      /\b(namaste|kaise|kya|hai|kitna|bhai|shukriya|aap|hum|khana|bhukh|lagi|karein|bolo|sun|dekho|kahan|theek)\b/.test(
+        lower
+      )
+    ) {
       return 'hi';
     }
 
     return 'en';
+  }
+
+  /**
+   * Human Speech Prosody & Breathing Engine:
+   * Real humans breathe, pause between clauses, and shift inflection.
+   * This transforms flat robot text into natural, live conversational delivery:
+   * - Inserts micro-pauses (...) at thought boundaries
+   * - Adds conversational breath transitions ("হ্যাঁ...", "আচ্ছা...", "Right...", "हाँ...")
+   * - Eliminates all synthetic markers, robot symbols, and formal bullet structures
+   */
+  public humanizeSpeechCadence(text: string, lang: string): string {
+    let spoken = text
+      // Clean emojis, links, markdown bullets, and database symbols
+      .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[•\-\*\_~`#>]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Natural clause breathing: turn harsh full stops and semicolons into smooth human micro-pauses
+    spoken = spoken
+      .replace(/([।!?])\s*/g, '$1 ... ')
+      .replace(/([;:])\s*/g, ', ')
+      .replace(/\s*\.\s*/g, ' ... ')
+      .replace(/,\s*/g, ', ');
+
+    // Normalize multiple pauses
+    spoken = spoken.replace(/(\s*\.\.\.\s*)+/g, ' ... ');
+
+    // If starting abruptly, inject subtle human conversational opening breathe if not already present
+    if (lang === 'bn') {
+      if (!/^(হ্যাঁ|আচ্ছা|নমস্কার|আসসালামু|হুম|দেখুন)/.test(spoken)) {
+        spoken = `আচ্ছা ... ${spoken}`;
+      }
+    } else if (lang === 'hi') {
+      if (!/^(हाँ|जी|नमस्ते|अच्छा|सुनिए|देखिए)/.test(spoken)) {
+        spoken = `जी ... ${spoken}`;
+      }
+    } else if (lang === 'en') {
+      if (!/^(yes|sure|right|well|hello|hey|hi)/i.test(spoken)) {
+        spoken = `Right ... ${spoken}`;
+      }
+    }
+
+    return spoken.trim();
   }
 }
 

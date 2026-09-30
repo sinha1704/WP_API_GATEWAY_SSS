@@ -166,27 +166,32 @@ Return ONLY raw JSON, with no markdown code blocks or additional text.`;
   }
 
   /**
-   * Step 3: Natural Language Answer Formatting for WhatsApp
+   * Step 3: Natural Human WhatsApp Answer Formatting
+   * Transforms raw ERP database rows into authentic, human staff texts without robot tags or SQL dumps
    */
   private async formatAnswerForWhatsApp(
     question: string,
     sql: string,
     rows: any[]
   ): Promise<string> {
-    const systemPrompt = `You are an executive WhatsApp ERP assistant.
-Translate the database query results into a crisp, professional, and clear WhatsApp message with emojis and bullet points.
+    const isBengali = /[\u0980-\u09FF]/.test(question);
+    const isHindi = /[\u0900-\u097F]/.test(question);
 
-Rules:
-- Be concise and executive-friendly.
-- Highlight key metrics, totals, currency, and quantities clearly.
-- Include a small footer note showing "[Verified via ERP Read-Only DB]".`;
+    const systemPrompt = `You are a real human team member responding on WhatsApp to a colleague or customer.
+Translate the database query results into a natural, conversational WhatsApp message.
 
-    const userPrompt = `User Question: "${question}"
-Executed SQL: ${sql}
-Database Query Results:
+Strict Rules:
+- Talk like a real human person chatting on WhatsApp.
+- NEVER say "ERP Report", "Query Executed", "Verified via ERP Read-Only Database", or show SQL code.
+- NEVER use rigid corporate templates.
+- State the numbers and items naturally and directly.
+- Reply in the same language as the question (${isBengali ? 'Bengali' : isHindi ? 'Hindi' : 'English'}).`;
+
+    const userPrompt = `Question: "${question}"
+Data Found:
 ${JSON.stringify(rows, null, 2)}
 
-Provide the final WhatsApp response:`;
+Provide the natural WhatsApp reply:`;
 
     try {
       const formatted = await this.callLlm(systemPrompt, userPrompt);
@@ -194,41 +199,73 @@ Provide the final WhatsApp response:`;
         return formatted.trim();
       }
     } catch (err: any) {
-      logger.warn({ err: err.message }, 'Formatting LLM call failed, generating template response');
+      logger.warn({ err: err.message }, 'Formatting LLM call failed, generating natural fallback response');
     }
 
-    // Fallback template formatter
+    // Natural human fallback formatter
     if (!rows || rows.length === 0) {
-      return `📊 *ERP Query Result*\n\nQuestion: "${question}"\n\nNo records found matching your request.\n\n_🔒 Verified via ERP Read-Only DB_`;
+      if (isBengali) {
+        return `আমি চেক করে দেখলাম, এই মুহূর্তে এর কোনো রেকর্ড পাওয়া যাচ্ছে না।`;
+      }
+      if (isHindi) {
+        return `मैंने चेक किया, फिलहाल इसका कोई रिकॉर्ड नहीं मिला।`;
+      }
+      return `I checked our system, but couldn't find any matching records for that right now.`;
     }
 
-    let answer = `📊 *ERP Business Report*\n\n*Question:* "${question}"\n\n`;
     const first = rows[0];
 
     if (first.total_sales !== undefined) {
-      answer += `💰 *Total Sales:* $${Number(first.total_sales).toLocaleString()}\n`;
-      if (first.order_count || first.completed_orders) {
-        answer += `📦 *Completed Orders:* ${first.order_count || first.completed_orders}\n`;
+      const salesVal = Number(first.total_sales).toLocaleString();
+      const countVal = first.order_count || first.completed_orders || 0;
+      if (isBengali) {
+        return `আজকের মোট বিক্রি হয়েছে $${salesVal} (মোট ${countVal}টি অর্ডার সম্পন্ন হয়েছে)।`;
       }
-    } else if (first.total_stock_items !== undefined || first.total_stock !== undefined) {
-      const stock = first.total_stock_items || first.total_stock;
-      answer += `📦 *Total Items In Stock:* ${Number(stock).toLocaleString()} units\n`;
-      if (first.unique_products || first.total_products) {
-        answer += `🏷️ *Active Products:* ${first.unique_products || first.total_products}\n`;
+      if (isHindi) {
+        return `आज की टोटल सेल $${salesVal} रही है, जिसमें कुल ${countVal} ऑर्डर्स पूरे हुए हैं।`;
       }
-    } else {
-      answer += `*Results (${rows.length} records):*\n`;
-      for (const item of rows.slice(0, 5)) {
-        if (item.name && item.stock_quantity !== undefined) {
-          answer += `• *${item.name}*: ${item.stock_quantity} in stock ($${item.unit_price})\n`;
-        } else {
-          answer += `• ${JSON.stringify(item)}\n`;
-        }
-      }
+      return `Total sales today is $${salesVal} across ${countVal} completed orders.`;
     }
 
-    answer += `\n_🔒 Query: \`${sql}\`_\n_🔒 Verified via ERP Read-Only Database_`;
-    return answer;
+    if (first.total_stock_items !== undefined || first.total_stock !== undefined) {
+      const stock = Number(first.total_stock_items || first.total_stock).toLocaleString();
+      if (isBengali) {
+        return `আমাদের কাছে বর্তমানে মোট ${stock}টি আইটেম স্টকে এভেইলেবল রয়েছে।`;
+      }
+      if (isHindi) {
+        return `हमारे पास अभी कुल ${stock} आइटम्स स्टॉक में मौजूद हैं।`;
+      }
+      return `We currently have ${stock} items in stock right now.`;
+    }
+
+    // Itemized listing
+    if (isBengali) {
+      let msg = `হ্যাঁ দেখছি, আমাদের কাছে রয়েছে:\n`;
+      for (const item of rows.slice(0, 5)) {
+        if (item.name && item.stock_quantity !== undefined) {
+          msg += `• ${item.name}: ${item.stock_quantity}টি বাকি আছে (দাম: $${item.unit_price})\n`;
+        }
+      }
+      return msg.trim();
+    }
+
+    if (isHindi) {
+      let msg = `जी, हमारे पास ये स्टॉक्स हैं:\n`;
+      for (const item of rows.slice(0, 5)) {
+        if (item.name && item.stock_quantity !== undefined) {
+          msg += `• ${item.name}: ${item.stock_quantity} पीस मौजूद हैं (रेट: $${item.unit_price})\n`;
+        }
+      }
+      return msg.trim();
+    }
+
+    let answer = `Here is what we have in stock:\n`;
+    for (const item of rows.slice(0, 5)) {
+      if (item.name && item.stock_quantity !== undefined) {
+        answer += `• ${item.name}: ${item.stock_quantity} available ($${item.unit_price})\n`;
+      }
+    }
+    return answer.trim();
   }
 
   /**
@@ -238,8 +275,8 @@ Provide the final WhatsApp response:`;
     const provider = config.ERP_LLM_PROVIDER;
 
     // 1. Groq Cloud (Free Tier, 0.5s latency, Llama-3.3-70B)
-    if (provider === 'groq' && (config.GROQ_API_KEY || config.AI_API_KEY)) {
-      const apiKey = config.GROQ_API_KEY || config.AI_API_KEY;
+    if (provider === 'groq' && config.GROQ_API_KEY) {
+      const apiKey = config.GROQ_API_KEY;
       const res = await axios.post(
         'https://api.groq.com/openai/v1/chat/completions',
         {
@@ -261,25 +298,41 @@ Provide the final WhatsApp response:`;
       return res.data?.choices?.[0]?.message?.content?.trim() || '';
     }
 
-    // 2. Google Gemini 2.0 Flash
-    if (provider === 'gemini' && config.AI_API_KEY) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${config.AI_API_KEY}`;
-      const res = await axios.post(
-        url,
-        {
-          contents: [
+    // 2. Google Gemini
+    if ((provider === 'gemini' || config.AI_PROVIDER === 'gemini') && config.AI_API_KEY) {
+      const candidateModels = [
+        config.ERP_LLM_MODEL,
+        'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash-lite',
+      ].filter(Boolean) as string[];
+
+      const uniqueModels = Array.from(new Set(candidateModels));
+      for (const model of uniqueModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.AI_API_KEY}`;
+          const res = await axios.post(
+            url,
             {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\nTask:\n${userPrompt}` }],
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemPrompt}\n\nTask:\n${userPrompt}` }],
+                },
+              ],
             },
-          ],
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 20000,
+            {
+              headers: { 'Content-Type': 'application/json' },
+              timeout: 20000,
+            }
+          );
+          const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (text) return text;
+        } catch (mErr: any) {
+          logger.warn({ model, err: mErr.message }, 'ERP Gemini model call failed, trying next');
         }
-      );
-      return res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      }
     }
 
     // 3. OpenAI GPT-4o-mini

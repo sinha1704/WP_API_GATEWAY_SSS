@@ -22,6 +22,7 @@ import { aiBridgeService } from './ai.service.js';
 import { throttledQueue } from './queue.service.js';
 import { voiceTranscriptionService } from './voice.service.js';
 import { erpQueryAgentService } from './erp-agent.service.js';
+import { mediaGenerationService } from './media-gen.service.js';
 
 export type SessionStatus = 'INITIALIZING' | 'SCAN_QR_CODE' | 'CONNECTED' | 'DISCONNECTED';
 
@@ -344,9 +345,9 @@ export class SessionManager {
             }
           } catch (voiceErr: any) {
             logger.error({ sessionId, err: voiceErr.message }, 'Failed to transcribe incoming voice note');
-            // If cloud transcription key isn't provided, recognize that a voice note was sent so customer still gets a voice reply
+            // If transcription was completely unavailable, prompt naturally so the conversation continues
             if (!text) {
-              text = 'Hello, I received your voice note. How can I help you today?';
+              text = 'নমস্কার, আপনার ভয়েস মেসেজটি পেয়েছি। বলুন কীভাবে সাহায্য করতে পারি?';
             }
           }
         }
@@ -416,7 +417,66 @@ export class SessionManager {
           });
         };
 
-        // 3. Voice-to-Database / ERP Query Pipeline
+        // 3. AI Image Generation Engine (Draw cartoons, photos, pictures via Flux Cloud GPU)
+        if (text && mediaGenerationService.isImageGenerationRequest(text)) {
+          try {
+            logger.info({ sessionId, to: remoteJid, text }, '🎨 Image generation intent detected from WhatsApp message/voice');
+            // Send quick acknowledgment text so the user knows it is being created
+            const isBengali = /[\u0980-\u09FF]/.test(text) || /\b(chobi|banao|ekta|cartoon)\b/i.test(text);
+            const isHindi = /[\u0900-\u097F]/.test(text) || /\b(tasveer|banao|photo)\b/i.test(text);
+
+            const ackText = isBengali
+              ? 'হ্যাঁ নিশ্চয়ই, আমি আপনার জন্য ছবিটি তৈরি করছি, এক মুহূর্ত অপেক্ষা করুন...'
+              : isHindi
+              ? 'हाँ बिल्कुल, मैं आपके लिए तस्वीर बना रहा हूँ, कृपया एक पल रुकिए...'
+              : 'Sure, I am generating the image for you right now, please hold on a moment...';
+
+            await this.sendTextMessage(sessionId, remoteJid, ackText, { simulatePresence: true, quoted: msg });
+
+            const generatedImage = await mediaGenerationService.generateImage(text);
+            if (generatedImage) {
+              await this.sendMediaMessage(
+                sessionId,
+                remoteJid,
+                {
+                  type: 'image',
+                  buffer: generatedImage.buffer,
+                  mimetype: generatedImage.mimetype,
+                  caption: generatedImage.caption,
+                },
+                { simulatePresence: true }
+              );
+              continue; // Successfully handled by image generation engine
+            }
+          } catch (imgErr: any) {
+            logger.error({ sessionId, err: imgErr.message }, 'Image generation processing failed');
+          }
+        }
+
+        // 4. On-Demand Document / PDF Generation
+        if (text && mediaGenerationService.isPdfGenerationRequest(text)) {
+          try {
+            logger.info({ sessionId, to: remoteJid, text }, '📄 PDF generation intent detected');
+            const pdfDoc = mediaGenerationService.generatePdfDocument('Business Information & Report', text);
+            await this.sendMediaMessage(
+              sessionId,
+              remoteJid,
+              {
+                type: 'document',
+                buffer: pdfDoc.buffer,
+                mimetype: pdfDoc.mimetype,
+                fileName: pdfDoc.fileName,
+                caption: 'Here is your generated PDF document 📄',
+              },
+              { simulatePresence: true }
+            );
+            continue; // Successfully handled by PDF generator
+          } catch (pdfErr: any) {
+            logger.error({ sessionId, err: pdfErr.message }, 'PDF generation processing failed');
+          }
+        }
+
+        // 5. Voice-to-Database / ERP Query Pipeline
         if (sessionInstance.erpQueryEnabled && text) {
           try {
             const erpResult = await erpQueryAgentService.processBusinessInquiry(text, senderPhone);

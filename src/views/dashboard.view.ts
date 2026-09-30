@@ -645,9 +645,15 @@ export function renderDashboardHtml(): string {
       <aside class="panel">
         <div class="panel-header">
           <span class="panel-title">WhatsApp Accounts</span>
-          <button class="btn-act btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="goToLinkNewAccountTab()">+ New Account</button>
+          <button class="btn-act btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="goToLinkNewAccountTab()">+ Pair Tab</button>
         </div>
         <div class="panel-content">
+          <!-- Quick Add Node Row -->
+          <div style="display: flex; gap: 6px; margin-bottom: 10px; background: var(--bg-subtle); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+            <input type="text" id="quick-new-session-id" class="ctrl-input ctrl-mono" style="padding: 4px 8px; font-size: 11px; flex: 1;" placeholder="session-2">
+            <button class="btn-act btn-primary" style="padding: 4px 10px; font-size: 11px; white-space: nowrap;" onclick="quickAddNewAccount()">+ Add & Scan</button>
+          </div>
+
           <!-- Session List -->
           <div class="session-list" id="session-list-box">
             <div style="color: var(--text-muted); font-size: 11.5px; text-align: center; padding: 10px;">Loading accounts...</div>
@@ -674,7 +680,7 @@ export function renderDashboardHtml(): string {
             <table class="tele-table" style="width: 90%;">
               <tr>
                 <td class="k">Active Node</td>
-                <td class="v" id="tbl-session-id">session-1</td>
+                <td class="v" id="tbl-session-id" style="font-weight: 700; color: var(--accent);">session-1</td>
               </tr>
               <tr>
                 <td class="k">Linked Phone</td>
@@ -755,12 +761,13 @@ export function renderDashboardHtml(): string {
                   Open WhatsApp on your phone &rarr; <b>Linked Devices</b> &rarr; <b>Link a Device</b> &rarr; Point your camera at the QR code.
                 </p>
                 <div style="margin-bottom: 12px;">
-                  <label class="field-lbl">New Account Node Name:</label>
-                  <input type="text" id="direct-qr-session-id" class="ctrl-input ctrl-mono" readonly style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
+                  <label class="field-lbl">Target Account Node Name (Must be unique, e.g. session-2):</label>
+                  <input type="text" id="direct-qr-session-id" class="ctrl-input ctrl-mono" style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
+                  <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px; display: block;">You can change this to any identifier (e.g. sales-desk, support-phone).</span>
                 </div>
               </div>
               <button id="btn-start-qr-direct" class="btn-act btn-primary" style="width: 100%; padding: 9px;" onclick="startDirectQrPairing()">
-                Generate QR Code for Next Account
+                Generate QR Code for this Account
               </button>
             </div>
 
@@ -774,6 +781,10 @@ export function renderDashboardHtml(): string {
                 <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
                   Receive an 8-character verification code to type directly inside WhatsApp (Linked Devices &rarr; Link with phone number).
                 </p>
+                <div style="margin-bottom: 8px;">
+                  <label class="field-lbl">Target Account Node Name:</label>
+                  <input type="text" id="direct-phone-session-id" class="ctrl-input ctrl-mono" style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
+                </div>
                 <div style="margin-bottom: 12px;">
                   <label class="field-lbl">Target Phone (Country code + Phone number):</label>
                   <input type="text" id="direct-phone-input" class="ctrl-input ctrl-mono" placeholder="e.g. 919876543210 (no spaces or +)">
@@ -953,9 +964,77 @@ export function renderDashboardHtml(): string {
     function updateNextSessionInputs() {
       const nextId = calculateNextSessionId();
       const modalInp = document.getElementById('new-session-id');
-      if (modalInp) modalInp.value = nextId;
+      if (modalInp && (!modalInp.value || modalInp.value.startsWith('session-'))) modalInp.value = nextId;
       const directQrInp = document.getElementById('direct-qr-session-id');
-      if (directQrInp) directQrInp.value = nextId;
+      if (directQrInp && (!directQrInp.value || directQrInp.value.startsWith('session-'))) directQrInp.value = nextId;
+      const directPhoneInp = document.getElementById('direct-phone-session-id');
+      if (directPhoneInp && (!directPhoneInp.value || directPhoneInp.value.startsWith('session-'))) directPhoneInp.value = nextId;
+      const quickInp = document.getElementById('quick-new-session-id');
+      if (quickInp && (!quickInp.value || quickInp.value.startsWith('session-'))) quickInp.value = nextId;
+    }
+
+    // Quick add new account right from the sidebar
+    async function quickAddNewAccount() {
+      const quickInp = document.getElementById('quick-new-session-id');
+      let targetId = quickInp ? quickInp.value.trim() : '';
+      if (!targetId) targetId = calculateNextSessionId();
+
+      activeSessionId = targetId;
+      document.getElementById('tbl-session-id').innerText = targetId;
+
+      const qrMsg = document.getElementById('qr-status-msg');
+      const qrImg = document.getElementById('qr-img-tag');
+      const statusLbl = document.getElementById('active-status-lbl');
+      const dot = document.getElementById('active-dot');
+
+      dot.className = 'dot';
+      statusLbl.innerText = 'Initializing ' + targetId + '...';
+      statusLbl.style.color = 'var(--warning)';
+      qrImg.style.display = 'none';
+      qrMsg.style.display = 'block';
+      qrMsg.innerText = 'Initializing ' + targetId + '...';
+
+      try {
+        await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: targetId, aiEnabled: true })
+        });
+
+        await refreshSessionList();
+        updateNextSessionInputs();
+
+        let attempts = 0;
+        const qrPoll = setInterval(async () => {
+          attempts++;
+          if (activeSessionId !== targetId) {
+            clearInterval(qrPoll);
+            return;
+          }
+          try {
+            const qrRes = await fetch('/api/sessions/' + targetId + '/qr');
+            if (qrRes.ok) {
+              const qrData = await qrRes.json();
+              if (qrData.status === 'CONNECTED') {
+                clearInterval(qrPoll);
+                loadActiveSessionDetails();
+                refreshSessionList();
+                return;
+              }
+              if (qrData.qrDataUrl) {
+                qrMsg.style.display = 'none';
+                qrImg.src = qrData.qrDataUrl;
+                qrImg.style.display = 'block';
+                statusLbl.innerText = 'Scan QR Code Now';
+              }
+            }
+          } catch (e) {}
+          if (attempts > 30) clearInterval(qrPoll);
+        }, 1200);
+
+      } catch (err) {
+        alert('Failed to initialize ' + targetId + ': ' + err.message);
+      }
     }
 
     async function openNewSessionModal() {
@@ -992,26 +1071,29 @@ export function renderDashboardHtml(): string {
     let pairPollTimer = null;
 
     async function startDirectQrPairing() {
-      const nextId = calculateNextSessionId();
+      const inputEl = document.getElementById('direct-qr-session-id');
+      let targetId = inputEl ? inputEl.value.trim() : '';
+      if (!targetId) targetId = calculateNextSessionId();
+
       const btn = document.getElementById('btn-start-qr-direct');
       const card = document.getElementById('pair-display-card');
       const pairIdSpan = document.getElementById('pair-display-id');
       const content = document.getElementById('pair-display-content');
 
       btn.disabled = true;
-      btn.innerText = 'Initializing ' + nextId + '...';
+      btn.innerText = 'Initializing ' + targetId + '...';
       card.style.display = 'block';
-      pairIdSpan.innerText = nextId;
-      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers and generating QR Code for <b>' + nextId + '</b>...</div>';
+      pairIdSpan.innerText = targetId;
+      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers and generating QR Code for <b>' + targetId + '</b>...</div>';
 
       try {
         await fetch('/api/sessions/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: nextId, aiEnabled: true })
+          body: JSON.stringify({ sessionId: targetId, aiEnabled: true })
         });
 
-        activeSessionId = nextId;
+        activeSessionId = targetId;
         await refreshSessionList();
         loadActiveSessionDetails();
         updateNextSessionInputs();
@@ -1021,7 +1103,7 @@ export function renderDashboardHtml(): string {
         const fetchQrInterval = setInterval(async () => {
           qrAttempts++;
           try {
-            const qrRes = await fetch('/api/sessions/' + nextId + '/qr');
+            const qrRes = await fetch('/api/sessions/' + targetId + '/qr');
             if (qrRes.ok) {
               const qrData = await qrRes.json();
               if (qrData.qrDataUrl) {
@@ -1030,13 +1112,13 @@ export function renderDashboardHtml(): string {
                   <div style="background: #ffffff; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: inline-block; margin-bottom: 12px;">
                     <img src="\${qrData.qrDataUrl}" alt="Scan QR Code" style="width: 230px; height: 230px; display: block;">
                   </div>
-                  <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Scan with 2nd WhatsApp Account</div>
+                  <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Scan with New WhatsApp Account (\${targetId})</div>
                   <div style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px;">Open WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
                 \`;
               }
             }
           } catch (e) {}
-          if (qrAttempts > 15) {
+          if (qrAttempts > 25) {
             clearInterval(fetchQrInterval);
           }
         }, 1000);
@@ -1045,7 +1127,7 @@ export function renderDashboardHtml(): string {
         if (pairPollTimer) clearInterval(pairPollTimer);
         pairPollTimer = setInterval(async () => {
           try {
-            const stRes = await fetch('/api/sessions/' + nextId + '/status');
+            const stRes = await fetch('/api/sessions/' + targetId + '/status');
             if (stRes.ok) {
               const stData = await stRes.json();
               if (stData.status === 'CONNECTED') {
@@ -1055,7 +1137,7 @@ export function renderDashboardHtml(): string {
                   <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
                     ✓ WhatsApp Account Successfully Linked!
                     <div style="font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 6px;">
-                      Node: \${nextId} • Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
+                      Node: \${targetId} • Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
                     </div>
                   </div>
                 \`;
@@ -1070,7 +1152,7 @@ export function renderDashboardHtml(): string {
         content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start QR pairing: ' + err.message + '</div>';
       } finally {
         btn.disabled = false;
-        btn.innerText = 'Generate QR Code for Next Account';
+        btn.innerText = 'Generate QR Code for this Account';
       }
     }
 
@@ -1084,7 +1166,10 @@ export function renderDashboardHtml(): string {
         return;
       }
 
-      const nextId = calculateNextSessionId();
+      const inputEl = document.getElementById('direct-phone-session-id');
+      let targetId = inputEl ? inputEl.value.trim() : '';
+      if (!targetId) targetId = calculateNextSessionId();
+
       const btn = document.getElementById('btn-start-phone-direct');
       const card = document.getElementById('pair-display-card');
       const pairIdSpan = document.getElementById('pair-display-id');
@@ -1093,17 +1178,17 @@ export function renderDashboardHtml(): string {
       btn.disabled = true;
       btn.innerText = 'Requesting 8-digit code...';
       card.style.display = 'block';
-      pairIdSpan.innerText = nextId;
-      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers for 8-digit code for +' + phone + '...</div>';
+      pairIdSpan.innerText = targetId;
+      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers for 8-digit code for +' + phone + ' (' + targetId + ')...</div>';
 
       try {
         await fetch('/api/sessions/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: nextId, phoneNumber: phone, aiEnabled: true })
+          body: JSON.stringify({ sessionId: targetId, phoneNumber: phone, aiEnabled: true })
         });
 
-        activeSessionId = nextId;
+        activeSessionId = targetId;
         await refreshSessionList();
         updateNextSessionInputs();
 
@@ -1113,7 +1198,7 @@ export function renderDashboardHtml(): string {
         pairPollTimer = setInterval(async () => {
           attempts++;
           try {
-            const stRes = await fetch('/api/sessions/' + nextId + '/status');
+            const stRes = await fetch('/api/sessions/' + targetId + '/status');
             if (stRes.ok) {
               const stData = await stRes.json();
               if (stData.status === 'CONNECTED') {
@@ -1129,7 +1214,7 @@ export function renderDashboardHtml(): string {
               }
               if (stData.pairingCode) {
                 content.innerHTML = \`
-                  <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Enter this 8-character code on your phone:</div>
+                  <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Enter this 8-character code on your phone for <b>\${targetId}</b>:</div>
                   <div style="font-family: var(--font-mono); font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #10b981; background: #061912; border: 1px solid #10b981; padding: 12px 24px; border-radius: 6px; display: inline-block;">
                     \${stData.pairingCode}
                   </div>
@@ -1300,13 +1385,25 @@ export function renderDashboardHtml(): string {
             qrMsg.style.display = 'block';
             qrMsg.innerHTML = '<div style="font-size: 11px; color: #5e6d7d; margin-bottom: 4px;">Enter on Phone:</div><div style="font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #10b981; background: #061912; padding: 6px 10px; border-radius: 4px; border: 1px solid #10b981;">' + data.pairingCode + '</div>';
           } else if (data.hasQrCode) {
-            qrMsg.style.display = 'none';
-            qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=image&t=' + Date.now();
-            qrImg.style.display = 'block';
+            try {
+              const qrRes = await fetch('/api/sessions/' + activeSessionId + '/qr');
+              if (qrRes.ok) {
+                const qrData = await qrRes.json();
+                if (qrData.qrDataUrl) {
+                  qrMsg.style.display = 'none';
+                  qrImg.src = qrData.qrDataUrl;
+                  qrImg.style.display = 'block';
+                }
+              }
+            } catch (e) {
+              qrMsg.style.display = 'none';
+              qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=image&t=' + Date.now();
+              qrImg.style.display = 'block';
+            }
           } else {
             qrImg.style.display = 'none';
             qrMsg.style.display = 'block';
-            qrMsg.innerText = 'Initializing QR code...';
+            qrMsg.innerText = 'Initializing QR code for ' + activeSessionId + '...';
           }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }

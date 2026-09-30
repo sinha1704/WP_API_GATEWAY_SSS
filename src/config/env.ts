@@ -27,7 +27,7 @@ const envSchema = z.object({
   VOICE_QUERY_ENABLED: z.coerce.boolean().default(true),
   VOICE_TRANSCRIPTION_PROVIDER: z.enum(['groq', 'openai', 'gemini', 'local_whisper']).default('groq'),
   VOICE_REPLY_MODE: z.enum(['voice', 'text', 'both']).default('voice'),
-  TTS_PROVIDER: z.enum(['google', 'openai', 'elevenlabs']).default('google'),
+  TTS_PROVIDER: z.enum(['edge', 'msedge', 'google', 'openai', 'elevenlabs']).default('edge'),
   ELEVENLABS_API_KEY: z.string().optional().default(''),
   GROQ_API_KEY: z.string().optional().default(''),
   GROQ_MODEL: z.string().default('openai/gpt-oss-20b'),
