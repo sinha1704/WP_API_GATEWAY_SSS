@@ -7,6 +7,7 @@ import {
   DisconnectReason,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
+  downloadContentFromMessage,
   proto,
   type WASocket,
   type ConnectionState,
@@ -19,6 +20,8 @@ import { config } from '../config/env.js';
 import { webhookService } from './webhook.service.js';
 import { aiBridgeService } from './ai.service.js';
 import { throttledQueue } from './queue.service.js';
+import { voiceTranscriptionService } from './voice.service.js';
+import { erpQueryAgentService } from './erp-agent.service.js';
 
 export type SessionStatus = 'INITIALIZING' | 'SCAN_QR_CODE' | 'CONNECTED' | 'DISCONNECTED';
 
@@ -34,6 +37,8 @@ export interface SessionInstance {
   webhookSecret?: string;
   aiEnabled?: boolean;
   aiPrompt?: string;
+  voiceQueryEnabled?: boolean;
+  erpQueryEnabled?: boolean;
   user?: {
     id: string;
     name?: string;
@@ -120,6 +125,8 @@ export class SessionManager {
       webhookSecret?: string;
       aiEnabled?: boolean;
       aiPrompt?: string;
+      voiceQueryEnabled?: boolean;
+      erpQueryEnabled?: boolean;
     }
   ): Promise<SessionInstance> {
     const existing = this.sessions.get(sessionId);
@@ -141,6 +148,8 @@ export class SessionManager {
       webhookSecret: options?.webhookSecret || existing?.webhookSecret,
       aiEnabled: options?.aiEnabled ?? existing?.aiEnabled ?? config.AI_BRIDGE_ENABLED,
       aiPrompt: options?.aiPrompt || existing?.aiPrompt,
+      voiceQueryEnabled: options?.voiceQueryEnabled ?? existing?.voiceQueryEnabled ?? config.VOICE_QUERY_ENABLED,
+      erpQueryEnabled: options?.erpQueryEnabled ?? existing?.erpQueryEnabled ?? config.ERP_QUERY_ENABLED,
     };
 
     this.sessions.set(sessionId, sessionInstance);
@@ -263,23 +272,70 @@ export class SessionManager {
         const remoteJid = msg.key.remoteJid;
         if (!remoteJid) continue;
 
-        const text =
-          msg.message.conversation ||
-          msg.message.extendedTextMessage?.text ||
-          msg.message.imageMessage?.caption ||
-          msg.message.videoMessage?.caption ||
+        // Extract raw message content unwrapping ephemeral or viewOnce wrappers
+        const messageContent =
+          msg.message.ephemeralMessage?.message ||
+          msg.message.viewOnceMessage?.message ||
+          msg.message.viewOnceMessageV2?.message ||
+          msg.message;
+
+        let text =
+          messageContent?.conversation ||
+          messageContent?.extendedTextMessage?.text ||
+          messageContent?.imageMessage?.caption ||
+          messageContent?.videoMessage?.caption ||
           '';
 
+        const audioMsg = messageContent?.audioMessage;
+        const isVoiceNote = Boolean(audioMsg);
         const senderPhone = remoteJid.split('@')[0];
         const pushName = msg.pushName || 'Unknown';
         const timestamp = Number(msg.messageTimestamp) * 1000 || Date.now();
 
+        // 0. Auto Mark As Read (Seen / Blue Ticks)
+        try {
+          await socket.readMessages([msg.key]);
+        } catch (readErr: any) {
+          logger.debug({ err: readErr.message }, 'Could not send read receipt');
+        }
+
         logger.info(
-          { sessionId, remoteJid, sender: pushName, text: text.substring(0, 80) },
+          { sessionId, remoteJid, sender: pushName, isVoiceNote, messageKeys: Object.keys(messageContent || {}), text: text.substring(0, 80) },
           'Inbound message received'
         );
 
-        // 1. Dispatch message.received Webhook
+        // 1. Voice Note Processing: Download & Transcribe to Text
+        if (isVoiceNote && audioMsg && sessionInstance.voiceQueryEnabled) {
+          try {
+            logger.info({ sessionId, remoteJid, mimetype: audioMsg.mimetype, ptt: audioMsg.ptt }, '🎙️ Voice note detected. Downloading audio stream...');
+            const stream = await downloadContentFromMessage(audioMsg, 'audio');
+            const chunks: Buffer[] = [];
+            for await (const chunk of stream) {
+              chunks.push(Buffer.from(chunk));
+            }
+            const audioBuffer = Buffer.concat(chunks);
+            const mimetype = audioMsg.mimetype || 'audio/ogg; codecs=opus';
+
+            const transcribedText = await voiceTranscriptionService.transcribeAudio(
+              audioBuffer,
+              mimetype,
+              'voice-message.ogg'
+            );
+
+            if (transcribedText) {
+              logger.info({ sessionId, transcribedText }, '🎙️ Voice note transcribed successfully');
+              text = transcribedText;
+            }
+          } catch (voiceErr: any) {
+            logger.error({ sessionId, err: voiceErr.message }, 'Failed to transcribe incoming voice note');
+            // If cloud transcription key isn't provided, recognize that a voice note was sent so customer still gets a voice reply
+            if (!text) {
+              text = 'Hello, I received your voice note. How can I help you today?';
+            }
+          }
+        }
+
+        // 2. Dispatch message.received Webhook (includes transcribedText if voice)
         await webhookService.dispatch(
           {
             event: 'message.received',
@@ -291,6 +347,7 @@ export class SessionManager {
               senderPhone,
               pushName,
               text,
+              isVoiceNote,
               hasMedia: Boolean(
                 msg.message.imageMessage ||
                   msg.message.videoMessage ||
@@ -304,7 +361,65 @@ export class SessionManager {
           sessionInstance.webhookSecret
         );
 
-        // 2. Check Pluggable AI Chatbot layer
+        // Helper function to dispatch either Voice Note (PTT) or Text reply based on input type & config
+        const sendResponse = async (replyText: string) => {
+          const shouldSendVoiceReply = isVoiceNote && (config.VOICE_REPLY_MODE === 'voice' || config.VOICE_REPLY_MODE === 'both');
+
+          if (shouldSendVoiceReply) {
+            try {
+              logger.info({ sessionId, to: remoteJid }, '🎙️ Synthesizing and sending Voice Note reply...');
+              const speech = await voiceTranscriptionService.synthesizeSpeech(replyText);
+              await this.sendMediaMessage(
+                sessionId,
+                remoteJid,
+                {
+                  type: 'audio',
+                  buffer: speech.buffer,
+                  mimetype: speech.mimetype,
+                  ptt: true, // Send as native WhatsApp Voice Note
+                },
+                { simulatePresence: true }
+              );
+
+              if (config.VOICE_REPLY_MODE === 'both') {
+                await this.sendTextMessage(sessionId, remoteJid, replyText, {
+                  simulatePresence: false,
+                  quoted: msg,
+                });
+              }
+              return;
+            } catch (ttsErr: any) {
+              logger.warn({ err: ttsErr.message }, 'Failed to send voice reply, falling back to text message');
+            }
+          }
+
+          // Fallback or default text reply
+          await this.sendTextMessage(sessionId, remoteJid, replyText, {
+            simulatePresence: true,
+            quoted: msg,
+          });
+        };
+
+        // 3. Voice-to-Database / ERP Query Pipeline
+        if (sessionInstance.erpQueryEnabled && text) {
+          try {
+            const erpResult = await erpQueryAgentService.processBusinessInquiry(text, senderPhone);
+
+            if (erpResult.isDatabaseQuery && erpResult.formattedAnswer) {
+              logger.info(
+                { sessionId, to: remoteJid, query: erpResult.generatedSql },
+                'ERP Query answered. Sending response to WhatsApp...'
+              );
+
+              await sendResponse(erpResult.formattedAnswer);
+              continue; // Successfully handled by ERP Query pipeline
+            }
+          } catch (erpErr: any) {
+            logger.error({ sessionId, err: erpErr.message }, 'ERP query processing encountered error');
+          }
+        }
+
+        // 4. Fallback to Standard Conversational AI Chatbot layer (Ja icche jiggesh koruk)
         if (sessionInstance.aiEnabled && text) {
           try {
             const aiReply = await aiBridgeService.generateReply(
@@ -316,13 +431,10 @@ export class SessionManager {
             if (aiReply) {
               logger.info(
                 { sessionId, to: remoteJid, replyLength: aiReply.length },
-                'AI Bridge generated automated reply. Enqueueing response...'
+                'AI Bridge generated automated reply. Sending response...'
               );
 
-              await this.sendTextMessage(sessionId, remoteJid, aiReply, {
-                simulatePresence: true,
-                quoted: msg,
-              });
+              await sendResponse(aiReply);
             }
           } catch (aiErr: any) {
             logger.error({ sessionId, err: aiErr.message }, 'AI Bridge response failed');
@@ -463,7 +575,7 @@ export class SessionManager {
       case 'audio':
         messageContent = {
           audio: mediaPayload,
-          mimetype: media.mimetype || 'audio/mp4',
+          mimetype: media.mimetype || (media.ptt ? 'audio/ogg; codecs=opus' : 'audio/mpeg'),
           ptt: media.ptt ?? false,
         };
         break;

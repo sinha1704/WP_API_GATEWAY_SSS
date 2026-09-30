@@ -23,6 +23,26 @@ const envSchema = z.object({
     'You are a helpful and polite WhatsApp customer support assistant. Keep answers concise, clear, and formatted nicely for WhatsApp.'
   ),
   SESSIONS_DIR: z.string().default('./sessions'),
+  // Voice Transcription & Audio Response Config
+  VOICE_QUERY_ENABLED: z.coerce.boolean().default(true),
+  VOICE_TRANSCRIPTION_PROVIDER: z.enum(['groq', 'openai', 'gemini', 'local_whisper']).default('groq'),
+  VOICE_REPLY_MODE: z.enum(['voice', 'text', 'both']).default('voice'),
+  TTS_PROVIDER: z.enum(['google', 'openai', 'elevenlabs']).default('google'),
+  ELEVENLABS_API_KEY: z.string().optional().default(''),
+  GROQ_API_KEY: z.string().optional().default(''),
+  LOCAL_WHISPER_URL: z.string().optional().default('http://localhost:8000/v1/audio/transcriptions'),
+  // ERP / Database Query Config
+  ERP_QUERY_ENABLED: z.coerce.boolean().default(true),
+  ERP_DB_TYPE: z.enum(['mock', 'postgres']).default('mock'),
+  ERP_DB_HOST: z.string().default('localhost'),
+  ERP_DB_PORT: z.coerce.number().default(5432),
+  ERP_DB_USER: z.string().default('ai_reader'),
+  ERP_DB_PASSWORD: z.string().default(''),
+  ERP_DB_NAME: z.string().default('erp_database'),
+  ERP_DB_SSL: z.coerce.boolean().default(false),
+  // ERP LLM Provider for Text-to-SQL & Answer Formatting
+  ERP_LLM_PROVIDER: z.enum(['groq', 'gemini', 'openai']).default('groq'),
+  ERP_LLM_MODEL: z.string().default('openai/gpt-oss-20b'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

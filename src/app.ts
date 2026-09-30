@@ -17,6 +17,7 @@ import { authenticateApiKey } from './middlewares/auth.middleware.js';
 import { sessionRoutes } from './routes/session.routes.js';
 import { messageRoutes } from './routes/message.routes.js';
 import { aiRoutes } from './routes/ai.routes.js';
+import { erpRoutes } from './routes/erp.routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -390,6 +391,7 @@ export async function buildApp() {
   await app.register(sessionRoutes);
   await app.register(messageRoutes);
   await app.register(aiRoutes);
+  await app.register(erpRoutes);
 
   // Centralized Error Handling
   app.setErrorHandler((error: any, request, reply) => {

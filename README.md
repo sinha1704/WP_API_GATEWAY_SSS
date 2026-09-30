@@ -20,9 +20,15 @@ High-speed, self-hosted WhatsApp API Gateway built with **Node.js (TypeScript St
 5. **Pluggable AI Chatbot Bridge:**
    - Seamlessly connect incoming chats to OpenAI (GPT-4o / GPT-4o-mini), Gemini (1.5 Flash), Anthropic (Claude 3.5), or custom LLM endpoints.
    - Auto-pipes smart responses with customizable system prompts.
-6. **OpenAPI / Swagger 3.0 Documentation:**
+6. **🎙️ Voice-to-Database / ERP Query Pipeline:**
+   - Transcribes incoming audio voice notes (via ultra-fast Groq Whisper, OpenAI Whisper, Gemini, or Self-Hosted Local Whisper VPS).
+   - Generates read-only SQL queries from natural language with **Schema Masking** (no raw personal data leaked to LLM).
+   - **Database Security Guard**: Enforces strict read-only queries (blocks `DROP`, `DELETE`, `INSERT`, `UPDATE`, multi-statement injections).
+   - Can connect to PostgreSQL production ERP databases or safe built-in mock databases.
+   - Automatically replies with crisp, verified WhatsApp business reports.
+7. **OpenAPI / Swagger 3.0 Documentation:**
    - Interactive UI served directly at `http://localhost:3000/docs`.
-7. **Production Ready:**
+8. **Production Ready:**
    - Multi-stage `Dockerfile` and `docker-compose.yml` for single-command deployment.
 
 ---
@@ -218,4 +224,37 @@ Expected output:
   ▶ Webhook Signature Verification (1 test passed)
 ✔ 7 tests passed (0 failures)
 ```
+
+---
+
+## 🎙️ Voice-to-Database / ERP Query Feature
+
+Users and managers can send a voice note asking business questions (e.g. *"How many items are in stock?"* or *"What was today's total sales?"*). The gateway:
+1. Downloads and transcribes the audio note to text (using Groq Whisper `0.5s`, Gemini, OpenAI, or Self-hosted Whisper).
+2. Generates safe SQL with **Schema Masking**.
+3. Enforces **Strict Read-Only Guardrails** (rejects `DROP`, `DELETE`, `UPDATE`, `INSERT`).
+4. Executes the query and returns a verified business report directly on WhatsApp.
+
+### Production Stage Setup (24/7 Deployment Options)
+
+| Deployment Option | Components | Latency | Software Cost | Privacy |
+|---|---|---|---|---|
+| **Option A: Self-Hosted VPS** | vLLM / Ollama + Whisper Docker container | ~1.5s - 2.5s | **$0** (Free & Open Source) | 100% In-House Private |
+| **Option B: Free Cloud Tiers** | Groq Cloud (Whisper + Llama-3.3-70B) or Gemini 2.0 Flash | **0.5s** (Ultra-fast) | **$0** (Free Tier - 14.4k requests/day) | Zero GPU Hardware Setup |
+
+### Production Security Guardrails
+
+1. **Strictly Read-Only Database User:**
+   ```sql
+   CREATE USER ai_reader WITH PASSWORD 'secure_password';
+   GRANT CONNECT ON DATABASE erp_database TO ai_reader;
+   GRANT USAGE ON SCHEMA public TO ai_reader;
+   GRANT SELECT ON ALL TABLES IN SCHEMA public TO ai_reader;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ai_reader;
+   ```
+2. **Schema Masking:**
+   Only masked metadata (table names and column definitions) is sent to the LLM. No sensitive raw customer phone numbers, personal identities, or financial credentials are ever exposed.
+3. **Application SQL Guard:**
+   Every generated SQL query is inspected before execution to block DDL/DML tokens and multi-statement injection attacks.
+
 
