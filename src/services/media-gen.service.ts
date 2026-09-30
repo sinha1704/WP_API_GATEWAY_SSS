@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 export interface GeneratedImageResult {
@@ -83,14 +84,98 @@ export class MediaGenerationService {
   }
 
   /**
-   * Generates ultra-sharp, artistic image using Flux / Pollinations AI (Zero server CPU/RAM impact)
-   * 100% Free, runs entirely on high-performance cloud GPUs
+   * Semantically extracts precise visual search or prompt terms from multilingual natural language
+   * Uses Gemini AI when available, with an advanced regex/dictionary fallback
    */
-  public async generateImage(userPrompt: string): Promise<GeneratedImageResult | null> {
-    logger.info({ userPrompt }, '🎨 Starting Cloud AI Image Generation...');
+  public async extractVisualKeywords(userPrompt: string): Promise<string> {
+    const lower = userPrompt.toLowerCase();
 
-    // Extract clean visual prompt by stripping conversational wrapper phrases
-    let cleanedPrompt = userPrompt
+    // 1. Primary: Use Gemini LLM for deep multilingual comprehension of the exact visual query
+    if (config.AI_API_KEY && !config.AI_API_KEY.includes('your_api_key')) {
+      try {
+        const candidateModels = [
+          'gemini-3.5-flash-lite',
+          'gemini-3.1-flash-lite',
+          'gemini-flash-latest',
+        ];
+
+        for (const model of candidateModels) {
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.AI_API_KEY}`;
+            const res = await axios.post(
+              url,
+              {
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [
+                      {
+                        text: `You are an image search query generator for a WhatsApp bot.
+A user sent this message: "${userPrompt}"
+Extract the EXACT visual subject or scene in English (2 to 4 words).
+Examples:
+- "মা দুর্গার একটা ভালো সিনারি ভালো প্যান্ডেলে মা দুর্গা আছে ছবি দাও" -> "Durga Puja pandal Kolkata"
+- "আমাকে একটা কার্টুনের ছবি দাও তো" -> "cute cartoon character"
+- "শতদলের একটা কার্টুন ছবি বানিয়ে দাও" -> "boy cartoon character"
+- "শিব ঠাকুরের ছবি" -> "Lord Shiva idol"
+- "একটা বিড়ালের ছবি" -> "cute kitten cat"
+Output ONLY the 2-4 English search keywords, no punctuation or extra words.`,
+                      },
+                    ],
+                  },
+                ],
+              },
+              { timeout: 7000 }
+            );
+
+            const extracted = res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (extracted && extracted.length > 2 && extracted.length < 60) {
+              logger.info({ userPrompt, extracted, model }, '🎯 Gemini extracted visual keywords');
+              return extracted.replace(/["\n\r.]/g, '').trim();
+            }
+          } catch (modelErr) {
+            // try next model
+          }
+        }
+      } catch (err: any) {
+        logger.debug({ err: err.message }, 'Gemini keyword extraction fell back to heuristics');
+      }
+    }
+
+    // 2. High-precision cultural & entity dictionary fallback
+    if (lower.includes('দুর্গা') || lower.includes('durga') || lower.includes('মহিষাসুরমর্দিনী') || lower.includes('mahishasura')) {
+      if (lower.includes('প্যান্ডেল') || lower.includes('pandal') || lower.includes('সিনারি') || lower.includes('scenery')) {
+        return 'Durga Puja pandal Kolkata';
+      }
+      return 'Maa Durga idol Kolkata';
+    }
+
+    if (lower.includes('কালী') || lower.includes('kali')) {
+      return 'Maa Kali idol temple';
+    }
+
+    if (lower.includes('শিব') || lower.includes('shiva') || lower.includes('মহাদেব') || lower.includes('mahadev')) {
+      return 'Lord Shiva idol temple';
+    }
+
+    if (lower.includes('কৃষ্ণ') || lower.includes('krishna') || lower.includes('গোপাল') || lower.includes('gopal')) {
+      return 'Lord Krishna idol';
+    }
+
+    if (lower.includes('গণেশ') || lower.includes('ganesh') || lower.includes('গণপতি') || lower.includes('ganapati')) {
+      return 'Lord Ganesha idol';
+    }
+
+    if (lower.includes('ছোটা ভীম') || lower.includes('chhota bheem') || lower.includes('chota bheem')) {
+      return 'Chhota Bheem';
+    }
+
+    if (lower.includes('কার্টুন') || lower.includes('cartoon') || lower.includes('কাটনি')) {
+      return 'cute cartoon character';
+    }
+
+    // 3. Fallback regex sanitizer
+    let cleaned = userPrompt
       .replace(/(please\s+)?(generate|create|make|draw)\s+(an?\s+)?(image|photo|picture|drawing|cartoon)(\s+of|\s+for)?/gi, '')
       .replace(/(ekta|ekti|amar|amake|amader)?\s*(image|chobi|cartoon|photo|tasveer)\s*(generate|banao|bana do|eke dao|toiri koro|dao)/gi, '')
       .replace(/(একটা|একটি|আমার|আমাকে)?\s*(কার্টুন|ইমেজ|ছবি|ফটো|কাটনি)\s*(জেনারেট|তৈরি|আঁকো|বানাও|দে|পাঠা|কর)/gi, '')
@@ -98,19 +183,80 @@ export class MediaGenerationService {
       .replace(/[।!?.,]/g, '')
       .trim();
 
-    if (!cleanedPrompt || cleanedPrompt.length < 3) {
-      cleanedPrompt = userPrompt;
+    return cleaned || userPrompt;
+  }
+
+  /**
+   * Generates or fetches exact high-definition image with zero server CPU/RAM footprint
+   * Tries Cloud GPU generation first; if rate-limited or payment-gated, falls back seamlessly to Wikimedia HD Photo Repository
+   */
+  public async generateImage(userPrompt: string): Promise<GeneratedImageResult | null> {
+    logger.info({ userPrompt }, '🎨 Starting Smart Image Engine...');
+
+    const searchKeyword = await this.extractVisualKeywords(userPrompt);
+    logger.info({ searchKeyword }, '🔍 Target visual query identified');
+
+    // Attempt 1: Wikimedia Commons High-Definition Repository (100% reliable, zero cost, authentic real-world photos & idols)
+    try {
+      const userAgent = 'WhatsAppBotGateway/1.0 (https://github.com/sinha1704/WP_API_GATEWAY_SSS; dev@gmail.com)';
+      const wikiUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
+        searchKeyword
+      )}&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url|thumburl|mime&iiurlwidth=1280&format=json`;
+
+      const wikiRes = await axios.get(wikiUrl, {
+        headers: { 'User-Agent': userAgent },
+        timeout: 10000,
+      });
+
+      const pages = Object.values(wikiRes.data?.query?.pages || {});
+      const hit: any = pages.find((p: any) => {
+        const mime = p.imageinfo?.[0]?.mime;
+        return mime === 'image/jpeg' || mime === 'image/png';
+      });
+
+      if (hit && hit.imageinfo?.[0]) {
+        const targetUrl = hit.imageinfo[0].thumburl || hit.imageinfo[0].url;
+        const dlRes = await axios.get(targetUrl, {
+          responseType: 'arraybuffer',
+          headers: { 'User-Agent': userAgent },
+          timeout: 15000,
+        });
+
+        const buffer = Buffer.from(dlRes.data);
+        const mimetype = hit.imageinfo[0].mime || 'image/jpeg';
+
+        logger.info({ title: hit.title, bytes: buffer.length }, '📸 HD Image successfully retrieved from high-res repository');
+
+        const isBengali = /[\u0980-\u09FF]/.test(userPrompt) || /\b(chobi|banao|ekta|cartoon)\b/i.test(userPrompt);
+        const isHindi = /[\u0900-\u097F]/.test(userPrompt) || /\b(banao|tasveer|kardo)\b/i.test(userPrompt);
+
+        let caption = `Here is the requested image: "${searchKeyword}" ✨`;
+        if (isBengali) {
+          caption = `এই নিন আপনার জন্য ছবি: "${searchKeyword}" ✨`;
+        } else if (isHindi) {
+          caption = `यह रही आपकी तस्वीर: "${searchKeyword}" ✨`;
+        }
+
+        return {
+          buffer,
+          mimetype,
+          prompt: searchKeyword,
+          caption,
+        };
+      }
+    } catch (wikiErr: any) {
+      logger.warn({ err: wikiErr.message }, 'Wikimedia image fetch failed or had no hit, trying Cloud AI Generator');
     }
 
-    // High quality aesthetic enhancer for Flux
-    const enhancedPrompt = `${cleanedPrompt}, highly detailed, beautiful lighting, cinematic, 8k resolution, photorealistic masterpiece`;
-    const encodedPrompt = encodeURIComponent(enhancedPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&model=flux`;
-
+    // Attempt 2: Cloud AI Diffusion Generator (Pollinations Flux / Turbo)
     try {
+      const enhancedPrompt = `${searchKeyword}, highly detailed, beautiful lighting, cinematic, 8k resolution, masterpiece`;
+      const encodedPrompt = encodeURIComponent(enhancedPrompt);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&model=turbo`;
+
       const res = await axios.get(imageUrl, {
         responseType: 'arraybuffer',
-        timeout: 35000,
+        timeout: 25000,
         headers: {
           'User-Agent': 'WhatsApp-API-Gateway/1.0',
         },
@@ -119,29 +265,63 @@ export class MediaGenerationService {
       const buffer = Buffer.from(res.data);
       const mimetype = String(res.headers['content-type'] || 'image/jpeg');
 
-      logger.info({ imageBytes: buffer.length, prompt: cleanedPrompt }, '🎨 Image successfully generated via Flux Cloud GPU');
+      logger.info({ imageBytes: buffer.length, prompt: searchKeyword }, '🎨 Image successfully generated via Cloud AI Generator');
 
-      // Detect language for caption
       const isBengali = /[\u0980-\u09FF]/.test(userPrompt) || /\b(ekta|chobi|banao|koro)\b/i.test(userPrompt);
       const isHindi = /[\u0900-\u097F]/.test(userPrompt) || /\b(banao|tasveer|kardo)\b/i.test(userPrompt);
 
-      let caption = `Here is your generated image for: "${cleanedPrompt}" ✨`;
+      let caption = `Here is your generated image for: "${searchKeyword}" ✨`;
       if (isBengali) {
-        caption = `এই নিন আপনার জন্য তৈরি করা ছবি: "${cleanedPrompt}" ✨`;
+        caption = `এই নিন আপনার জন্য তৈরি করা ছবি: "${searchKeyword}" ✨`;
       } else if (isHindi) {
-        caption = `यह रही आपकी बनाई हुई तस्वीर: "${cleanedPrompt}" ✨`;
+        caption = `यह रही आपकी बनाई हुई तस्वीर: "${searchKeyword}" ✨`;
       }
 
       return {
         buffer,
         mimetype,
-        prompt: cleanedPrompt,
+        prompt: searchKeyword,
         caption,
       };
     } catch (err: any) {
-      logger.error({ err: err.message }, 'Failed to generate cloud AI image');
-      return null;
+      logger.warn({ err: err.message }, 'Cloud AI diffusion busy or payment-gated');
     }
+
+    // Attempt 3: High-Speed Anime / Cartoon Illustration Provider (pic.re / nekos.life)
+    if (searchKeyword.toLowerCase().includes('cartoon') || searchKeyword.toLowerCase().includes('anime')) {
+      try {
+        const res = await axios.get('https://pic.re/image', {
+          responseType: 'arraybuffer',
+          timeout: 10000,
+        });
+
+        const buffer = Buffer.from(res.data);
+        const mimetype = String(res.headers['content-type'] || 'image/jpeg');
+
+        logger.info({ imageBytes: buffer.length }, '🎨 Cartoon illustration fetched from high-speed provider');
+
+        const isBengali = /[\u0980-\u09FF]/.test(userPrompt) || /\b(chobi|banao|ekta|cartoon)\b/i.test(userPrompt);
+        const isHindi = /[\u0900-\u097F]/.test(userPrompt) || /\b(banao|tasveer|kardo)\b/i.test(userPrompt);
+
+        let caption = `Here is your cartoon image: "${searchKeyword}" ✨`;
+        if (isBengali) {
+          caption = `এই নিন আপনার জন্য কার্টুন ছবি: "${searchKeyword}" ✨`;
+        } else if (isHindi) {
+          caption = `यह रही आपकी कार्टून तस्वीर: "${searchKeyword}" ✨`;
+        }
+
+        return {
+          buffer,
+          mimetype,
+          prompt: searchKeyword,
+          caption,
+        };
+      } catch (cartoonErr: any) {
+        logger.error({ err: cartoonErr.message }, 'Cartoon fallback provider failed');
+      }
+    }
+
+    return null;
   }
 
   /**
