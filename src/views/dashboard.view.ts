@@ -666,6 +666,7 @@ export function renderDashboardHtml(): string {
             </div>
 
             <div style="display: flex; gap: 6px; width: 90%; margin-bottom: 8px;">
+              <button id="btn-reconnect-node" class="btn-act btn-primary" style="flex: 1; font-size: 11px; padding: 4px;" onclick="reconnectActiveSession()">Connect</button>
               <button class="btn-act btn-outline" style="flex: 1; font-size: 11px; padding: 4px;" onclick="refreshActiveSession()">Refresh</button>
               <button class="btn-act btn-danger" style="flex: 1; font-size: 11px; padding: 4px;" onclick="disconnectCurrentSession()">Disconnect</button>
             </div>
@@ -862,8 +863,19 @@ export function renderDashboardHtml(): string {
     // Modal controls: Dynamically auto-generates next session number (e.g. session-2, session-3)
     let cachedSessionList = [];
 
-    function openNewSessionModal() {
-      // Find all existing session numbers like session-1, session-2, etc.
+    async function openNewSessionModal() {
+      // 1. Fetch fresh list from server to guarantee accuracy
+      try {
+        const res = await fetch('/api/sessions');
+        if (res.ok) {
+          const data = await res.json();
+          cachedSessionList = data.sessions || [];
+        }
+      } catch (err) {
+        console.debug('Failed to fetch sessions before modal open', err);
+      }
+
+      // 2. Scan existing session IDs
       let maxNum = 0;
       cachedSessionList.forEach(s => {
         const match = s.id && s.id.match(/^session-(\d+)$/i);
@@ -872,7 +884,8 @@ export function renderDashboardHtml(): string {
           if (num > maxNum) maxNum = num;
         }
       });
-      // Next session ID is strictly sequential
+
+      // Next session ID is strictly sequential (session-1 if empty, session-2 if session-1 exists, etc.)
       const nextSessionId = 'session-' + (maxNum + 1);
       
       const inputEl = document.getElementById('new-session-id');
@@ -997,12 +1010,15 @@ export function renderDashboardHtml(): string {
         }
         const data = await res.json();
 
+        const reconnectBtn = document.getElementById('btn-reconnect-node');
+
         if (data.status === 'CONNECTED') {
           dot.className = 'dot live';
           statusLbl.innerText = 'Connected & Active';
           statusLbl.style.color = 'var(--accent)';
           phoneLbl.innerText = data.user?.id ? data.user.id.split(':')[0] : 'Paired';
           qrFrame.innerHTML = '<div style="color: #12161b; font-size: 11.5px; font-weight: 600; text-align: center; padding: 20px;">✓ Device Paired<br><span style="font-size: 10.5px; font-weight: 400; color: #5e6d7d;">Receiving WhatsApp traffic</span></div>';
+          if (reconnectBtn) reconnectBtn.style.display = 'none';
         } else {
           dot.className = 'dot';
           statusLbl.innerText = data.status || 'Disconnected';
@@ -1012,6 +1028,7 @@ export function renderDashboardHtml(): string {
           qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=svg&t=' + Date.now();
           qrImg.style.display = 'block';
           qrMsg.style.display = 'none';
+          if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }
       } catch (err) {
         console.debug('Failed to load session details', err);
@@ -1021,6 +1038,26 @@ export function renderDashboardHtml(): string {
     function refreshActiveSession() {
       loadActiveSessionDetails();
       refreshSessionList();
+    }
+
+    async function reconnectActiveSession() {
+      const btn = document.getElementById('btn-reconnect-node');
+      btn.disabled = true;
+      btn.innerText = 'Connecting...';
+      try {
+        await fetch('/api/sessions/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: activeSessionId, aiEnabled: true })
+        });
+        await refreshSessionList();
+        await loadActiveSessionDetails();
+      } catch (err) {
+        alert('Failed to connect node: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Connect';
+      }
     }
 
     async function disconnectCurrentSession() {
