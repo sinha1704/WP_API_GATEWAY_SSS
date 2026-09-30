@@ -645,7 +645,7 @@ export function renderDashboardHtml(): string {
       <aside class="panel">
         <div class="panel-header">
           <span class="panel-title">WhatsApp Accounts</span>
-          <button class="btn-act btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="openNewSessionModal()">+ New Account</button>
+          <button class="btn-act btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="goToLinkNewAccountTab()">+ New Account</button>
         </div>
         <div class="panel-content">
           <!-- Session List -->
@@ -974,6 +974,20 @@ export function renderDashboardHtml(): string {
       document.getElementById('new-session-prompt').focus();
     }
 
+    function goToLinkNewAccountTab() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      let pairTabBtn = null;
+      tabBtns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('pane-pair')) {
+          pairTabBtn = btn;
+        }
+      });
+      if (pairTabBtn) {
+        activateTab('pane-pair', pairTabBtn);
+      }
+      updateNextSessionInputs();
+    }
+
     // Direct QR Code Pairing without confusing modal
     let pairPollTimer = null;
 
@@ -988,7 +1002,7 @@ export function renderDashboardHtml(): string {
       btn.innerText = 'Initializing ' + nextId + '...';
       card.style.display = 'block';
       pairIdSpan.innerText = nextId;
-      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Generating WhatsApp QR Code for <b>' + nextId + '</b>...</div>';
+      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers and generating QR Code for <b>' + nextId + '</b>...</div>';
 
       try {
         await fetch('/api/sessions/start', {
@@ -999,18 +1013,35 @@ export function renderDashboardHtml(): string {
 
         activeSessionId = nextId;
         await refreshSessionList();
+        loadActiveSessionDetails();
         updateNextSessionInputs();
 
-        // Render live QR Code directly in the display card
-        content.innerHTML = \`
-          <div style="background: #ffffff; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: inline-block; margin-bottom: 12px;">
-            <img src="/api/sessions/\${nextId}/qr?format=svg&t=\${Date.now()}" alt="Scan QR Code" style="width: 220px; height: 220px; display: block;">
-          </div>
-          <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Point WhatsApp Camera at this QR Code</div>
-          <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
-        \`;
+        // Repeatedly check for QR code readiness with retry
+        let qrAttempts = 0;
+        const fetchQrInterval = setInterval(async () => {
+          qrAttempts++;
+          try {
+            const qrRes = await fetch('/api/sessions/' + nextId + '/qr');
+            if (qrRes.ok) {
+              const qrData = await qrRes.json();
+              if (qrData.qrDataUrl) {
+                clearInterval(fetchQrInterval);
+                content.innerHTML = \`
+                  <div style="background: #ffffff; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: inline-block; margin-bottom: 12px;">
+                    <img src="\${qrData.qrDataUrl}" alt="Scan QR Code" style="width: 230px; height: 230px; display: block;">
+                  </div>
+                  <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Scan with 2nd WhatsApp Account</div>
+                  <div style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px;">Open WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
+                \`;
+              }
+            }
+          } catch (e) {}
+          if (qrAttempts > 15) {
+            clearInterval(fetchQrInterval);
+          }
+        }, 1000);
 
-        // Poll for connection
+        // Poll for connection status
         if (pairPollTimer) clearInterval(pairPollTimer);
         pairPollTimer = setInterval(async () => {
           try {
@@ -1019,11 +1050,12 @@ export function renderDashboardHtml(): string {
               const stData = await stRes.json();
               if (stData.status === 'CONNECTED') {
                 clearInterval(pairPollTimer);
+                clearInterval(fetchQrInterval);
                 content.innerHTML = \`
                   <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
                     ✓ WhatsApp Account Successfully Linked!
                     <div style="font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 6px;">
-                      Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
+                      Node: \${nextId} • Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
                     </div>
                   </div>
                 \`;
@@ -1032,7 +1064,7 @@ export function renderDashboardHtml(): string {
               }
             }
           } catch (e) {}
-        }, 3000);
+        }, 2500);
 
       } catch (err) {
         content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start QR pairing: ' + err.message + '</div>';
@@ -1253,7 +1285,9 @@ export function renderDashboardHtml(): string {
           statusLbl.innerText = 'Connected & Active';
           statusLbl.style.color = 'var(--accent)';
           phoneLbl.innerText = data.user?.id ? data.user.id.split(':')[0] : 'Paired';
-          qrFrame.innerHTML = '<div style="color: #12161b; font-size: 11.5px; font-weight: 600; text-align: center; padding: 20px;">✓ Device Paired<br><span style="font-size: 10.5px; font-weight: 400; color: #5e6d7d;">Receiving WhatsApp traffic</span></div>';
+          qrImg.style.display = 'none';
+          qrMsg.style.display = 'block';
+          qrMsg.innerHTML = '<span style="color: #10b981; font-weight: 600; font-size: 13px;">✓ Device Paired</span><br><span style="font-size: 11px; color: #9aa7b4;">Receiving WhatsApp traffic</span>';
           if (reconnectBtn) reconnectBtn.style.display = 'none';
         } else {
           dot.className = 'dot';
@@ -1262,11 +1296,17 @@ export function renderDashboardHtml(): string {
           phoneLbl.innerText = 'Waiting for scan/code';
 
           if (data.pairingCode) {
-            qrFrame.innerHTML = '<div style="color: #12161b; text-align: center; padding: 20px;"><div style="font-size: 11px; color: #5e6d7d; margin-bottom: 6px; font-weight: 500;">Enter Code on Phone:</div><div style="font-family: var(--font-mono); font-size: 24px; font-weight: 700; letter-spacing: 4px; color: #059669; background: #ecfdf5; padding: 8px 12px; border-radius: 4px; border: 1px solid #10b981;">' + data.pairingCode + '</div><div style="font-size: 10px; color: #5e6d7d; margin-top: 8px;">WhatsApp > Linked Devices > Link with phone number</div></div>';
-          } else {
-            qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=svg&t=' + Date.now();
-            qrImg.style.display = 'block';
+            qrImg.style.display = 'none';
+            qrMsg.style.display = 'block';
+            qrMsg.innerHTML = '<div style="font-size: 11px; color: #5e6d7d; margin-bottom: 4px;">Enter on Phone:</div><div style="font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #10b981; background: #061912; padding: 6px 10px; border-radius: 4px; border: 1px solid #10b981;">' + data.pairingCode + '</div>';
+          } else if (data.hasQrCode) {
             qrMsg.style.display = 'none';
+            qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=image&t=' + Date.now();
+            qrImg.style.display = 'block';
+          } else {
+            qrImg.style.display = 'none';
+            qrMsg.style.display = 'block';
+            qrMsg.innerText = 'Initializing QR code...';
           }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }

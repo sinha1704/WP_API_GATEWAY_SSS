@@ -199,6 +199,12 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         return reply.type('image/svg+xml').send(session.qrCodeSvg);
       }
 
+      if (format === 'image' && session.qrCodeDataUrl) {
+        const base64Data = session.qrCodeDataUrl.replace(/^data:image\/png;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+        return reply.type('image/png').send(imgBuffer);
+      }
+
       if (format === 'html') {
         const html = `
           <!DOCTYPE html>
