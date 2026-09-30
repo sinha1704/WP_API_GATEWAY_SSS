@@ -1,0 +1,38 @@
+services:
+  whatsapp-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+      - MASTER_API_KEY=master_secret_key_whatsapp_gateway_2026
+      - SCOPED_API_KEYS={}
+      - GLOBAL_WEBHOOK_URL=${GLOBAL_WEBHOOK_URL:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-gateway_webhook_signature_secret_xyz}
+      - PRESENCE_MIN_DELAY_MS=1500
+      - PRESENCE_MAX_DELAY_MS=3000
+      - QUEUE_MESSAGE_DELAY_MS=3000
+      - AI_BRIDGE_ENABLED=${AI_BRIDGE_ENABLED:-false}
+      - AI_PROVIDER=${AI_PROVIDER:-openai}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_MODEL=${AI_MODEL:-gpt-4o-mini}
+      - SESSIONS_DIR=/app/sessions
+    volumes:
+      # Persistent storage for session credentials across restarts
+      - whatsapp_sessions:/app/sessions
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  whatsapp_sessions:
+    driver: local
