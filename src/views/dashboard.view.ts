@@ -636,6 +636,142 @@ export function renderDashboardHtml(): string {
       border-color: var(--status-danger);
     }
 
+    /* Enterprise RBAC Interface Styling */
+    .rbac-mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .rbac-mode-card {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      cursor: pointer;
+      align-items: flex-start;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .rbac-mode-card:hover {
+      border-color: var(--border-active);
+      background: var(--bg-elevated);
+      transform: translateY(-1px);
+    }
+
+    .rbac-mode-card.is-active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .rbac-mode-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .rbac-mode-card.is-active .rbac-mode-icon {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+    }
+
+    .rbac-mode-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rbac-mode-desc {
+      font-size: 11.5px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .rbac-dropzone {
+      border: 2px dashed var(--border-active);
+      border-radius: var(--radius-md);
+      padding: 22px 20px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.4);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .rbac-dropzone:hover, .rbac-dropzone.is-dragover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    .contact-chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+    }
+
+    .contact-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 4px 9px;
+      border-radius: 5px;
+      transition: border-color 0.15s ease;
+    }
+
+    .contact-badge:hover {
+      border-color: #38bdf8;
+    }
+
+    .contact-badge-del {
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+
+    .contact-badge-del:hover {
+      color: var(--status-danger);
+    }
+
+    .whitelist-stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
     /* Output Console Area */
     .result-console {
       margin-top: 14px;
@@ -1061,7 +1197,7 @@ export function renderDashboardHtml(): string {
                 <td class="spec-k">Linked Phone</td>
                 <td class="spec-v" id="tbl-phone">Checking...</td>
               </tr>
-              <tr style="cursor: pointer;" onclick="goToGuardrailsTab()" title="Click to edit RBAC Access Policy">
+              <tr style="cursor: pointer;" onclick="goToRbacTab()" title="Click to configure Access & RBAC Whitelist">
                 <td class="spec-k">RBAC Policy</td>
                 <td class="spec-v" id="tbl-rbac-mode" style="color: #38bdf8; font-weight: 600; text-decoration: underline dotted;">All (Public)</td>
               </tr>
@@ -1105,6 +1241,10 @@ export function renderDashboardHtml(): string {
           <div class="tab-item" onclick="activateTab('pane-guard', this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span>Guardrails</span>
+          </div>
+          <div class="tab-item" id="tab-btn-rbac" onclick="activateTab('pane-rbac', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Access & RBAC</span>
           </div>
         </div>
 
@@ -1284,45 +1424,137 @@ export function renderDashboardHtml(): string {
             <div id="out-guard-text" class="console-body"></div>
           </div>
 
-          <!-- Enterprise Multi-Tenant RBAC Access Policy Manager -->
-          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-weight: 700; font-size: 13.5px; color: var(--text-main);">Enterprise Contact-Level RBAC Policy</span>
-              <span class="brand-badge" id="rbac-status-badge">Node: session-1</span>
-            </div>
-            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 14px; line-height: 1.5;">
-              Restrict who can communicate with this gateway node. In <b>Restricted Mode</b>, messages from anyone outside the allowed whitelist are silently dropped with zero data or prompt leakage.
-            </p>
+          </div>
+        </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-              <label style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px; display: flex; gap: 10px; cursor: pointer; align-items: flex-start;">
-                <input type="radio" name="rbac-mode-radio" value="all" id="rbac-radio-all" checked onchange="toggleRbacFields()">
-                <div>
-                  <div style="font-weight: 600; font-size: 12.5px; color: var(--text-main);">Public Mode (All Contacts)</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Accepts inquiries from any customer or partner number globally.</div>
+        <!-- TAB: ENTERPRISE ACCESS CONTROL & RBAC WHITELIST MANAGER -->
+        <div id="pane-rbac" class="tab-content-area">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0;">Enterprise Multi-Tenant RBAC Access Policy</h3>
+                <span class="brand-badge" id="rbac-node-pill">Node: session-1</span>
+                <span class="brand-badge" id="rbac-mode-indicator" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Public Mode</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-sub); margin-top: 5px; line-height: 1.5; max-width: 780px;">
+                Govern incoming message permissions with socket-level zero-trust enforcement. In <b>Restricted Whitelist Mode</b>, inbound messages from unlisted numbers are dropped instantly before read receipts are generated — <b>ensuring zero blue ticks, zero database ERP lookups, and zero LLM prompt leakage.</b>
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-ghost" style="font-size: 11.5px; padding: 6px 12px;" onclick="exportWhitelistCsv()" title="Export current whitelist to CSV">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Export CSV
+              </button>
+              <button class="btn btn-solid-emerald" id="btn-save-rbac-top" style="font-size: 11.5px; padding: 6px 14px;" onclick="saveRbacPolicy()">
+                Save & Apply Policy
+              </button>
+            </div>
+          </div>
+
+          <!-- Policy Selector Cards -->
+          <div class="rbac-mode-grid">
+            <div class="rbac-mode-card is-active" id="card-rbac-all" onclick="selectRbacMode('all')">
+              <div class="rbac-mode-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div style="flex: 1;">
+                <div class="rbac-mode-title">
+                  <span>Public Mode (Unrestricted)</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">Global</span>
                 </div>
-              </label>
-
-              <label style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px; display: flex; gap: 10px; cursor: pointer; align-items: flex-start;">
-                <input type="radio" name="rbac-mode-radio" value="restricted" id="rbac-radio-restricted" onchange="toggleRbacFields()">
-                <div>
-                  <div style="font-weight: 600; font-size: 12.5px; color: #38bdf8;">Restricted Whitelist (Private)</div>
-                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Only authorized VIP numbers, team leads, or client contacts can talk.</div>
+                <div class="rbac-mode-desc">
+                  Accepts inquiries from any customer, client, or partner worldwide. AI Assistant answers queries, runs ERP stock checks, and transcribes voice notes automatically.
                 </div>
+              </div>
+            </div>
+
+            <div class="rbac-mode-card" id="card-rbac-restricted" onclick="selectRbacMode('restricted')">
+              <div class="rbac-mode-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <div style="flex: 1;">
+                <div class="rbac-mode-title">
+                  <span>Restricted VIP Whitelist</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Zero-Trust Private</span>
+                </div>
+                <div class="rbac-mode-desc">
+                  Only authorized team leads, corporate VIPs, and client phone numbers in the whitelist below can interact. All other numbers are silently ignored with zero read ticks.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Restricted Whitelist Management Workspace -->
+          <div id="rbac-whitelist-workspace" style="display: none; animation: fadeIn 0.2s ease;">
+            
+            <!-- Bulk Upload Zone -->
+            <div style="margin-bottom: 20px;">
+              <label class="field-caption" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Bulk Import Contacts (CSV / Excel / TXT):</span>
+                <span style="font-size: 11px; color: var(--text-muted);">Supports international format with country code (e.g. 919876543210, +12025550143)</span>
               </label>
+              
+              <div class="rbac-dropzone" id="rbac-drop-area" onclick="document.getElementById('rbac-file-input').click()">
+                <input type="file" id="rbac-file-input" accept=".csv, .txt, .tsv, .xlsx, .xls" style="display: none;" onchange="handleRbacFileUpload(this.files)">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                  <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                  </div>
+                  <div style="text-align: left;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                      Click to browse or drag & drop CSV, TXT, or Excel files
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                      Columns or rows containing phone numbers will be automatically extracted, cleaned, and deduplicated.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="rbac-upload-status" style="font-size: 11.5px; color: #34d399; margin-top: 6px; display: none;"></div>
             </div>
 
-            <div class="form-group" id="rbac-whitelist-group" style="display: none;">
-              <label class="field-caption">Authorized Whitelist (Comma-separated phone numbers or WhatsApp JIDs):</label>
-              <input type="text" id="inp-rbac-whitelist" class="field-input field-mono" placeholder="919876543210, 917046344658, 919382468250">
-              <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">All other senders will be completely ignored with zero automated replies or database lookups.</span>
+            <!-- Manual Add Single Contact Field -->
+            <div style="display: flex; gap: 10px; margin-bottom: 18px;">
+              <div style="flex: 1;">
+                <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Type single phone number (e.g. 919382468250) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
+              </div>
+              <button class="btn btn-ghost" style="padding: 0 16px;" onclick="addSingleContact()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
+                Add Number
+              </button>
             </div>
 
-            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 7px 16px; font-size: 12px;" onclick="saveRbacPolicy()">
+            <!-- Whitelisted Contacts Overview & Tags Container -->
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+              <div class="whitelist-stats-bar">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-weight: 700; color: var(--text-main); font-size: 13px;">Authorized VIP Whitelist Directory</span>
+                  <span id="whitelist-count-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-family: var(--font-mono);">0 numbers</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="text" id="inp-filter-whitelist" class="field-input field-mono" style="padding: 4px 8px; font-size: 11px; width: 180px;" placeholder="Search numbers..." oninput="filterContactChips()">
+                  <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 8px;" onclick="clearAllWhitelistedContacts()">Clear All</button>
+                </div>
+              </div>
+
+              <!-- Visual Chips List -->
+              <div class="contact-chip-container" id="whitelist-chips-box">
+                <div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">
+                  No authorized numbers configured. Upload a CSV file or add phone numbers above to restrict access.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Save Actions -->
+          <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border-subtle); padding-top: 16px; margin-top: 10px;">
+            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 9px 20px; font-size: 13px;" onclick="saveRbacPolicy()">
               Apply RBAC Rules to Node
             </button>
-            <span id="rbac-save-msg" style="font-size: 11.5px; margin-left: 12px; color: #34d399; display: none;">✓ Rules updated successfully</span>
+            <span id="rbac-save-msg" style="font-size: 12px; color: #34d399; font-weight: 600; display: none;">✓ RBAC Policy successfully synced to active session</span>
           </div>
+
         </div>
 
         <!-- TAB: AUTHENTIC WHATSAPP LIVE DEVICE SIMULATOR -->
@@ -1572,6 +1804,20 @@ export function renderDashboardHtml(): string {
       });
       if (guardTabBtn) {
         activateTab('pane-guard', guardTabBtn);
+      }
+    }
+
+    function goToRbacTab() {
+      const rbacTabBtn = document.getElementById('tab-btn-rbac');
+      if (rbacTabBtn) {
+        activateTab('pane-rbac', rbacTabBtn);
+      } else {
+        const tabBtns = document.querySelectorAll('.tab-item');
+        tabBtns.forEach(btn => {
+          if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('pane-rbac')) {
+            activateTab('pane-rbac', btn);
+          }
+        });
       }
     }
 
@@ -1921,57 +2167,273 @@ export function renderDashboardHtml(): string {
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }
         // Update RBAC status badge and form fields
+        // Sync RBAC status across dashboard indicators and active form state
         const rbacLbl = document.getElementById('tbl-rbac-mode');
-        const rbacBadge = document.getElementById('rbac-status-badge');
         const rbacMode = data.accessMode || 'all';
         const allowedList = data.allowedContacts || [];
+
+        currentRbacState.mode = rbacMode;
+        currentRbacState.allowedContacts = [...allowedList];
 
         if (rbacLbl) {
           rbacLbl.innerText = rbacMode === 'restricted' ? ('Restricted (' + allowedList.length + ' VIPs)') : 'All (Public)';
           rbacLbl.style.color = rbacMode === 'restricted' ? '#f59e0b' : '#34d399';
         }
-        if (rbacBadge) {
-          rbacBadge.innerText = 'Node: ' + activeSessionId + ' (' + rbacMode.toUpperCase() + ')';
-        }
 
-        const radioAll = document.getElementById('rbac-radio-all');
-        const radioRestricted = document.getElementById('rbac-radio-restricted');
-        const whitelistGroup = document.getElementById('rbac-whitelist-group');
-        const whitelistInp = document.getElementById('inp-rbac-whitelist');
-
-        if (radioAll && radioRestricted) {
-          if (rbacMode === 'restricted') {
-            radioRestricted.checked = true;
-            if (whitelistGroup) whitelistGroup.style.display = 'block';
-            if (whitelistInp) whitelistInp.value = allowedList.join(', ');
-          } else {
-            radioAll.checked = true;
-            if (whitelistGroup) whitelistGroup.style.display = 'none';
-          }
-        }
+        renderRbacUi();
       } catch (err) {
         console.debug('Failed to load session details', err);
       }
     }
 
-    function toggleRbacFields() {
-      const isRestricted = document.getElementById('rbac-radio-restricted')?.checked;
-      const group = document.getElementById('rbac-whitelist-group');
-      if (group) group.style.display = isRestricted ? 'block' : 'none';
+    // Enterprise RBAC State Management & Interactive Chip Component
+    const currentRbacState = {
+      mode: 'all',
+      allowedContacts: []
+    };
+
+    function selectRbacMode(mode) {
+      currentRbacState.mode = mode;
+      renderRbacUi();
+    }
+
+    function renderRbacUi() {
+      const pillNode = document.getElementById('rbac-node-pill');
+      const pillMode = document.getElementById('rbac-mode-indicator');
+      const cardAll = document.getElementById('card-rbac-all');
+      const cardRestricted = document.getElementById('card-rbac-restricted');
+      const workspace = document.getElementById('rbac-whitelist-workspace');
+
+      if (pillNode) pillNode.innerText = 'Node: ' + activeSessionId;
+
+      const isRestricted = currentRbacState.mode === 'restricted';
+
+      if (pillMode) {
+        pillMode.innerText = isRestricted ? ('Restricted (' + currentRbacState.allowedContacts.length + ' VIPs)') : 'Public (Global)';
+        pillMode.style.color = isRestricted ? '#f59e0b' : '#34d399';
+        pillMode.style.borderColor = isRestricted ? 'rgba(245, 158, 11, 0.3)' : 'rgba(52, 211, 153, 0.3)';
+        pillMode.style.background = isRestricted ? 'rgba(245, 158, 11, 0.1)' : 'rgba(52, 211, 153, 0.1)';
+      }
+
+      if (cardAll && cardRestricted) {
+        if (isRestricted) {
+          cardAll.classList.remove('is-active');
+          cardRestricted.classList.add('is-active');
+          if (workspace) workspace.style.display = 'block';
+        } else {
+          cardAll.classList.add('is-active');
+          cardRestricted.classList.remove('is-active');
+          if (workspace) workspace.style.display = 'none';
+        }
+      }
+
+      renderContactChips();
+    }
+
+    function sanitizePhoneNumber(raw) {
+      if (!raw) return '';
+      // Remove whatsapp suffixes like @s.whatsapp.net or @c.us if present
+      let cleaned = String(raw).split('@')[0].trim();
+      // Remove symbols (+, -, spaces, parentheses)
+      cleaned = cleaned.replace(/[^\d]/g, '');
+      return cleaned;
+    }
+
+    function addSingleContact() {
+      const inp = document.getElementById('inp-rbac-single');
+      if (!inp) return;
+      const num = sanitizePhoneNumber(inp.value);
+      if (!num) {
+        alert('Please enter a valid phone number (digits only, e.g. 919876543210)');
+        return;
+      }
+      if (currentRbacState.allowedContacts.includes(num)) {
+        alert('Number "' + num + '" is already in the whitelist.');
+        inp.value = '';
+        return;
+      }
+      currentRbacState.allowedContacts.unshift(num);
+      inp.value = '';
+      renderContactChips();
+    }
+
+    function removeContact(num) {
+      currentRbacState.allowedContacts = currentRbacState.allowedContacts.filter(c => c !== num);
+      renderContactChips();
+    }
+
+    function clearAllWhitelistedContacts() {
+      if (currentRbacState.allowedContacts.length === 0) return;
+      if (!confirm('Clear all ' + currentRbacState.allowedContacts.length + ' whitelisted numbers?')) return;
+      currentRbacState.allowedContacts = [];
+      renderContactChips();
+    }
+
+    function renderContactChips() {
+      const box = document.getElementById('whitelist-chips-box');
+      const badge = document.getElementById('whitelist-count-badge');
+      const filterInp = document.getElementById('inp-filter-whitelist');
+      const filter = filterInp ? filterInp.value.toLowerCase().trim() : '';
+
+      if (badge) {
+        badge.innerText = currentRbacState.allowedContacts.length + ' numbers';
+      }
+
+      if (!box) return;
+
+      const filtered = filter
+        ? currentRbacState.allowedContacts.filter(c => c.toLowerCase().includes(filter))
+        : currentRbacState.allowedContacts;
+
+      if (filtered.length === 0) {
+        if (currentRbacState.allowedContacts.length === 0) {
+          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">No authorized numbers configured. Upload a CSV file or add phone numbers above to restrict access.</div>';
+        } else {
+          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">No contacts match filter "' + filter + '"</div>';
+        }
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(num => {
+        html += \`
+          <span class="contact-badge">
+            <span>\${num}</span>
+            <span class="contact-badge-del" title="Remove \${num}" onclick="removeContact('\${num}')">&times;</span>
+          </span>
+        \`;
+      });
+      box.innerHTML = html;
+    }
+
+    function filterContactChips() {
+      renderContactChips();
+    }
+
+    // Bulk File Upload Parser: CSV, TXT, Excel/TSV
+    function handleRbacFileUpload(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const statusDiv = document.getElementById('rbac-upload-status');
+
+      if (statusDiv) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.color = '#38bdf8';
+        statusDiv.innerText = 'Reading file "' + file.name + '"...';
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target.result;
+          let extracted = [];
+
+          if (typeof content === 'string') {
+            // Split by line breaks, commas, semicolons, tabs
+            const tokens = content.split(/[\\r\\n,;\\t]+/);
+            tokens.forEach(tok => {
+              const cleaned = sanitizePhoneNumber(tok);
+              // Must be a plausible phone number: length between 7 and 16 digits
+              if (cleaned.length >= 7 && cleaned.length <= 16) {
+                extracted.push(cleaned);
+              }
+            });
+          }
+
+          // Deduplicate
+          const uniqueNew = Array.from(new Set(extracted));
+          let addedCount = 0;
+
+          uniqueNew.forEach(num => {
+            if (!currentRbacState.allowedContacts.includes(num)) {
+              currentRbacState.allowedContacts.push(num);
+              addedCount++;
+            }
+          });
+
+          renderContactChips();
+
+          if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = '#34d399';
+            statusDiv.innerText = '✓ Successfully imported ' + addedCount + ' new contacts from "' + file.name + '" (Total in Whitelist: ' + currentRbacState.allowedContacts.length + ')';
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 6000);
+          }
+        } catch (parseErr) {
+          if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.style.color = 'var(--status-danger)';
+            statusDiv.innerText = 'Failed to parse file: ' + parseErr.message;
+          }
+        }
+      };
+
+      reader.onerror = () => {
+        if (statusDiv) {
+          statusDiv.style.display = 'block';
+          statusDiv.style.color = 'var(--status-danger)';
+          statusDiv.innerText = 'Error reading file from disk.';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Drag and Drop listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      const dropArea = document.getElementById('rbac-drop-area');
+      if (dropArea) {
+        ['dragenter', 'dragover'].forEach(name => {
+          dropArea.addEventListener(name, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('is-dragover');
+          });
+        });
+        ['dragleave', 'drop'].forEach(name => {
+          dropArea.addEventListener(name, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('is-dragover');
+          });
+        });
+        dropArea.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length) {
+            handleRbacFileUpload(dt.files);
+          }
+        });
+      }
+    });
+
+    // Whitelist CSV Exporter
+    function exportWhitelistCsv() {
+      if (currentRbacState.allowedContacts.length === 0) {
+        alert('Whitelist is currently empty. Nothing to export.');
+        return;
+      }
+      const csvHeader = 'Phone Number,Node ID\\r\\n';
+      const rows = currentRbacState.allowedContacts.map(num => num + ',' + activeSessionId).join('\\r\\n');
+      const blob = new Blob([csvHeader + rows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'rbac_whitelist_' + activeSessionId + '_' + Date.now() + '.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     async function saveRbacPolicy() {
-      const isRestricted = document.getElementById('rbac-radio-restricted')?.checked;
-      const mode = isRestricted ? 'restricted' : 'all';
-      const rawContacts = document.getElementById('inp-rbac-whitelist')?.value || '';
-      const allowedContacts = rawContacts
-        .split(',')
-        .map(c => c.trim())
-        .filter(Boolean);
+      const mode = currentRbacState.mode;
+      const allowedContacts = currentRbacState.allowedContacts;
 
-      const btn = document.getElementById('btn-save-rbac');
+      const btn1 = document.getElementById('btn-save-rbac');
+      const btn2 = document.getElementById('btn-save-rbac-top');
       const msg = document.getElementById('rbac-save-msg');
-      if (btn) btn.disabled = true;
+
+      if (btn1) btn1.disabled = true;
+      if (btn2) btn2.disabled = true;
 
       try {
         const res = await fetch('/api/sessions/' + activeSessionId + '/access', {
@@ -1982,14 +2444,16 @@ export function renderDashboardHtml(): string {
         if (!res.ok) throw new Error('Failed to update access control');
         if (msg) {
           msg.style.display = 'inline';
-          setTimeout(() => { msg.style.display = 'none'; }, 3000);
+          msg.innerText = '✓ RBAC rules synced to node "' + activeSessionId + '" (' + mode.toUpperCase() + ', ' + allowedContacts.length + ' contacts)';
+          setTimeout(() => { msg.style.display = 'none'; }, 4000);
         }
         await loadActiveSessionDetails();
         await refreshSessionList();
       } catch (err) {
         alert('RBAC update failed: ' + err.message);
       } finally {
-        if (btn) btn.disabled = false;
+        if (btn1) btn1.disabled = false;
+        if (btn2) btn2.disabled = false;
       }
     }
 
