@@ -636,6 +636,63 @@ export function renderDashboardHtml(): string {
       border-color: var(--status-danger);
     }
 
+    /* Modern Enterprise Toast Notification System */
+    .app-toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999999;
+      pointer-events: none;
+    }
+
+    .app-toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #111726;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 12px 18px;
+      color: #f8fafc;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 280px;
+      max-width: 440px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      backdrop-filter: blur(12px);
+    }
+
+    .app-toast.is-success {
+      border-left: 4px solid #34d399;
+    }
+
+    .app-toast.is-error {
+      border-left: 4px solid #f87171;
+    }
+
+    .app-toast.is-info {
+      border-left: 4px solid #38bdf8;
+    }
+
+    .app-toast.is-warning {
+      border-left: 4px solid #fbbf24;
+    }
+
+    @keyframes slideInToast {
+      from { transform: translateX(110%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOutToast {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(110%); opacity: 0; }
+    }
+
     /* Enterprise RBAC Interface Styling */
     .rbac-mode-grid {
       display: grid;
@@ -2270,25 +2327,61 @@ export function renderDashboardHtml(): string {
       renderContactChips();
     }
 
+    // Modern Enterprise Toast Notification Trigger
+    function showToast(message, type = 'info', duration = 3500) {
+      let container = document.getElementById('toast-root');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-root';
+        container.className = 'app-toast-container';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = 'app-toast is-' + type;
+
+      let iconSvg = '';
+      if (type === 'success') {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      } else if (type === 'warning') {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      } else {
+        iconSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+      }
+
+      toast.innerHTML = iconSvg + '<div style="flex: 1; line-height: 1.4;">' + message + '</div>';
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOutToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+        setTimeout(() => {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 260);
+      }, duration);
+    }
+
     function sanitizePhoneNumber(raw) {
       if (!raw) return '';
       // Remove whatsapp suffixes like @s.whatsapp.net or @c.us if present
       let cleaned = String(raw).split('@')[0].trim();
-      // Remove symbols (+, -, spaces, parentheses)
-      cleaned = cleaned.replace(/[^\d]/g, '');
+      // Remove symbols (+, -, spaces, parentheses, etc) keeping only numeric digits
+      cleaned = cleaned.replace(/[^0-9]/g, '');
       return cleaned;
     }
 
     function addSingleContact() {
       const inp = document.getElementById('inp-rbac-single');
       if (!inp) return;
-      const num = sanitizePhoneNumber(inp.value);
-      if (!num) {
-        alert('Please enter a valid phone number (digits only, e.g. 919876543210)');
+      const rawVal = inp.value.trim();
+      const num = sanitizePhoneNumber(rawVal);
+      if (!num || num.length < 7) {
+        showToast('Please enter a valid phone number with country code (e.g. 917063644658)', 'warning');
         return;
       }
       if (currentRbacState.allowedContacts.includes(num)) {
-        alert('Number "' + num + '" is already in the whitelist.');
+        showToast('Number ' + num + ' is already authorized in the whitelist.', 'info');
         inp.value = '';
         return;
       }
@@ -2297,6 +2390,7 @@ export function renderDashboardHtml(): string {
       inp.value = '';
       renderContactChips();
       saveRbacPolicy(true);
+      showToast('Added ' + num + ' to authorized whitelist', 'success');
     }
 
     function removeContact(num) {
@@ -2304,6 +2398,7 @@ export function renderDashboardHtml(): string {
       currentRbacState.hasUnsavedChanges = true;
       renderContactChips();
       saveRbacPolicy(true);
+      showToast('Removed ' + num + ' from whitelist', 'info');
     }
 
     function clearAllWhitelistedContacts() {
@@ -2313,6 +2408,7 @@ export function renderDashboardHtml(): string {
       currentRbacState.hasUnsavedChanges = true;
       renderContactChips();
       saveRbacPolicy(true);
+      showToast('Cleared all whitelisted numbers', 'info');
     }
 
     function renderContactChips() {
