@@ -1061,9 +1061,9 @@ export function renderDashboardHtml(): string {
                 <td class="spec-k">Linked Phone</td>
                 <td class="spec-v" id="tbl-phone">Checking...</td>
               </tr>
-              <tr>
+              <tr style="cursor: pointer;" onclick="goToGuardrailsTab()" title="Click to edit RBAC Access Policy">
                 <td class="spec-k">RBAC Policy</td>
-                <td class="spec-v" id="tbl-rbac-mode" style="color: #38bdf8; font-weight: 600;">All (Public)</td>
+                <td class="spec-v" id="tbl-rbac-mode" style="color: #38bdf8; font-weight: 600; text-decoration: underline dotted;">All (Public)</td>
               </tr>
               <tr>
                 <td class="spec-k">Anti-Ban Queue</td>
@@ -1560,6 +1560,19 @@ export function renderDashboardHtml(): string {
         activateTab('pane-pair', pairTabBtn);
       }
       updateNextSessionInputs();
+    }
+
+    function goToGuardrailsTab() {
+      const tabBtns = document.querySelectorAll('.tab-item');
+      let guardTabBtn = null;
+      tabBtns.forEach(btn => {
+        if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('pane-guard')) {
+          guardTabBtn = btn;
+        }
+      });
+      if (guardTabBtn) {
+        activateTab('pane-guard', guardTabBtn);
+      }
     }
 
     // Direct QR Code Pairing without confusing modal

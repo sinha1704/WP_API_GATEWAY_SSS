@@ -354,19 +354,8 @@ export class SessionManager {
         const pushName = msg.pushName || 'Unknown';
         const timestamp = Number(msg.messageTimestamp) * 1000 || Date.now();
 
-        // 0. Auto Mark As Read (Seen / Blue Ticks)
-        try {
-          await socket.readMessages([msg.key]);
-        } catch (readErr: any) {
-          logger.debug({ err: readErr.message }, 'Could not send read receipt');
-        }
-
-        logger.info(
-          { sessionId, remoteJid, sender: pushName, isVoiceNote, messageKeys: Object.keys(messageContent || {}), text: text.substring(0, 80) },
-          'Inbound message received'
-        );
-
-        // RBAC Access Control Guard: Check if this node is in 'restricted' mode
+        // 0. RBAC Access Control Guard: Check if this node is in 'restricted' mode
+        // If unauthorized: NEVER send read receipt (seen/blue tick), do not log content, do not answer
         if (sessionInstance.accessMode === 'restricted') {
           const allowedList = sessionInstance.allowedContacts || [];
           const cleanSenderPhone = senderPhone.replace(/\D/g, '');
@@ -383,11 +372,23 @@ export class SessionManager {
           if (!isAllowed) {
             logger.warn(
               { sessionId, remoteJid, senderPhone, allowedCount: allowedList.length },
-              '🛡️ RBAC Guard: Message ignored because sender is not in the authorized whitelist for this node'
+              '🛡️ RBAC Guard: Message ignored & NOT marked as seen because sender is not authorized'
             );
-            continue; // Completely ignore messages from unauthorized contacts (Zero Data / AI leakage)
+            continue; // Completely drop: NO read receipt, NO webhook, NO AI reply
           }
         }
+
+        // 1. Auto Mark As Read (Seen / Blue Ticks) - ONLY for authorized contacts
+        try {
+          await socket.readMessages([msg.key]);
+        } catch (readErr: any) {
+          logger.debug({ err: readErr.message }, 'Could not send read receipt');
+        }
+
+        logger.info(
+          { sessionId, remoteJid, sender: pushName, isVoiceNote, messageKeys: Object.keys(messageContent || {}), text: text.substring(0, 80) },
+          'Inbound message received'
+        );
 
         // 1. Voice Note Processing: Download & Transcribe to Text
         if (isVoiceNote && audioMsg && sessionInstance.voiceQueryEnabled) {
