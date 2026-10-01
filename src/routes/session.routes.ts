@@ -21,6 +21,8 @@ export async function sessionRoutes(fastify: FastifyInstance) {
           aiEnabled: z.boolean().optional().describe('Enable automated AI replies for incoming chats'),
           aiPrompt: z.string().optional().describe('Custom system prompt for AI chatbot'),
           phoneNumber: z.string().optional().describe('Target phone number for Pairing Code link'),
+          accessMode: z.enum(['all', 'restricted']).optional().default('all').describe("RBAC access mode: 'all' communicates with everyone; 'restricted' only interacts with allowedContacts"),
+          allowedContacts: z.array(z.string()).optional().default([]).describe('Whitelist of permitted phone numbers or JIDs if accessMode is restricted'),
         }),
         response: {
           200: z.object({
@@ -40,6 +42,8 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         aiEnabled?: boolean;
         aiPrompt?: string;
         phoneNumber?: string;
+        accessMode?: 'all' | 'restricted';
+        allowedContacts?: string[];
       };
 
       const session = await sessionManager.initSession(body.sessionId, {
@@ -48,6 +52,8 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         aiEnabled: body.aiEnabled,
         aiPrompt: body.aiPrompt,
         phoneNumber: body.phoneNumber,
+        accessMode: body.accessMode,
+        allowedContacts: body.allowedContacts,
       });
 
       return reply.send({
@@ -122,6 +128,8 @@ export async function sessionRoutes(fastify: FastifyInstance) {
               .optional(),
             hasQrCode: z.boolean(),
             pairingCode: z.string().optional(),
+            accessMode: z.string().optional(),
+            allowedContacts: z.array(z.string()).optional(),
           }),
           404: z.object({
             success: z.boolean(),
@@ -148,6 +156,48 @@ export async function sessionRoutes(fastify: FastifyInstance) {
         user: session.user,
         hasQrCode: Boolean(session.qrCodeRaw),
         pairingCode: session.pairingCode,
+        accessMode: session.accessMode || 'all',
+        allowedContacts: session.allowedContacts || [],
+      });
+    }
+  );
+
+  /**
+   * Update RBAC Access Control configuration for a session node
+   */
+  fastify.put(
+    '/api/sessions/:sessionId/access',
+    {
+      schema: {
+        description: 'Configure enterprise RBAC access rules (All contacts vs Restricted whitelist)',
+        tags: ['Sessions'],
+        params: z.object({
+          sessionId: z.string(),
+        }),
+        body: z.object({
+          accessMode: z.enum(['all', 'restricted']),
+          allowedContacts: z.array(z.string()).default([]),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { sessionId } = request.params as { sessionId: string };
+      const { accessMode, allowedContacts } = request.body as {
+        accessMode: 'all' | 'restricted';
+        allowedContacts: string[];
+      };
+
+      const updated = sessionManager.updateAccessControl(sessionId, accessMode, allowedContacts);
+      if (!updated) {
+        return reply.status(404).send({ success: false, error: `Session "${sessionId}" not found` });
+      }
+
+      return reply.send({
+        success: true,
+        sessionId,
+        accessMode,
+        allowedContacts,
+        message: `RBAC access rules updated for ${sessionId}`,
       });
     }
   );

@@ -26,6 +26,8 @@ import { mediaGenerationService } from './media-gen.service.js';
 
 export type SessionStatus = 'INITIALIZING' | 'SCAN_QR_CODE' | 'CONNECTED' | 'DISCONNECTED';
 
+export type SessionAccessMode = 'all' | 'restricted';
+
 export interface SessionInstance {
   id: string;
   socket: WASocket | null;
@@ -41,6 +43,8 @@ export interface SessionInstance {
   aiPrompt?: string;
   voiceQueryEnabled?: boolean;
   erpQueryEnabled?: boolean;
+  accessMode?: SessionAccessMode;
+  allowedContacts?: string[];
   user?: {
     id: string;
     name?: string;
@@ -100,6 +104,8 @@ export class SessionManager {
     user?: { id: string; name?: string };
     hasQrCode: boolean;
     queueLength: number;
+    accessMode: SessionAccessMode;
+    allowedContacts: string[];
   }> {
     return Array.from(this.sessions.values()).map((s) => ({
       id: s.id,
@@ -107,7 +113,29 @@ export class SessionManager {
       user: s.user,
       hasQrCode: Boolean(s.qrCodeRaw),
       queueLength: throttledQueue.getQueueLength(s.id),
+      accessMode: s.accessMode || 'all',
+      allowedContacts: s.allowedContacts || [],
     }));
+  }
+
+  /**
+   * Update RBAC access control configuration for an active session node
+   */
+  public updateAccessControl(
+    sessionId: string,
+    accessMode: SessionAccessMode,
+    allowedContacts: string[]
+  ): boolean {
+    const session = this.sessions.get(sessionId);
+    if (!session) return false;
+
+    session.accessMode = accessMode;
+    session.allowedContacts = allowedContacts;
+    logger.info(
+      { sessionId, accessMode, contactCount: allowedContacts.length },
+      'Updated session RBAC access control rules'
+    );
+    return true;
   }
 
   /**
@@ -130,6 +158,8 @@ export class SessionManager {
       voiceQueryEnabled?: boolean;
       erpQueryEnabled?: boolean;
       phoneNumber?: string;
+      accessMode?: SessionAccessMode;
+      allowedContacts?: string[];
     }
   ): Promise<SessionInstance> {
     const existing = this.sessions.get(sessionId);
@@ -166,6 +196,8 @@ export class SessionManager {
       aiPrompt: options?.aiPrompt || existing?.aiPrompt,
       voiceQueryEnabled: options?.voiceQueryEnabled ?? existing?.voiceQueryEnabled ?? config.VOICE_QUERY_ENABLED,
       erpQueryEnabled: options?.erpQueryEnabled ?? existing?.erpQueryEnabled ?? config.ERP_QUERY_ENABLED,
+      accessMode: options?.accessMode ?? existing?.accessMode ?? 'all',
+      allowedContacts: options?.allowedContacts ?? existing?.allowedContacts ?? [],
     };
 
     this.sessions.set(sessionId, sessionInstance);
@@ -333,6 +365,29 @@ export class SessionManager {
           { sessionId, remoteJid, sender: pushName, isVoiceNote, messageKeys: Object.keys(messageContent || {}), text: text.substring(0, 80) },
           'Inbound message received'
         );
+
+        // RBAC Access Control Guard: Check if this node is in 'restricted' mode
+        if (sessionInstance.accessMode === 'restricted') {
+          const allowedList = sessionInstance.allowedContacts || [];
+          const cleanSenderPhone = senderPhone.replace(/\D/g, '');
+          const isAllowed = allowedList.some((allowed) => {
+            const cleanAllowed = allowed.replace(/\D/g, '');
+            return (
+              allowed === remoteJid ||
+              allowed === senderPhone ||
+              cleanAllowed === cleanSenderPhone ||
+              (cleanAllowed.length >= 10 && cleanSenderPhone.endsWith(cleanAllowed))
+            );
+          });
+
+          if (!isAllowed) {
+            logger.warn(
+              { sessionId, remoteJid, senderPhone, allowedCount: allowedList.length },
+              '🛡️ RBAC Guard: Message ignored because sender is not in the authorized whitelist for this node'
+            );
+            continue; // Completely ignore messages from unauthorized contacts (Zero Data / AI leakage)
+          }
+        }
 
         // 1. Voice Note Processing: Download & Transcribe to Text
         if (isVoiceNote && audioMsg && sessionInstance.voiceQueryEnabled) {

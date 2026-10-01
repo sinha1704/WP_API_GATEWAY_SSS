@@ -1062,6 +1062,10 @@ export function renderDashboardHtml(): string {
                 <td class="spec-v" id="tbl-phone">Checking...</td>
               </tr>
               <tr>
+                <td class="spec-k">RBAC Policy</td>
+                <td class="spec-v" id="tbl-rbac-mode" style="color: #38bdf8; font-weight: 600;">All (Public)</td>
+              </tr>
+              <tr>
                 <td class="spec-k">Anti-Ban Queue</td>
                 <td class="spec-v" style="color: #34d399;">Throttled (3s Safe)</td>
               </tr>
@@ -1278,6 +1282,46 @@ export function renderDashboardHtml(): string {
               <span id="out-guard-badge" style="font-weight: 600;">Status</span>
             </div>
             <div id="out-guard-text" class="console-body"></div>
+          </div>
+
+          <!-- Enterprise Multi-Tenant RBAC Access Policy Manager -->
+          <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-weight: 700; font-size: 13.5px; color: var(--text-main);">Enterprise Contact-Level RBAC Policy</span>
+              <span class="brand-badge" id="rbac-status-badge">Node: session-1</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 14px; line-height: 1.5;">
+              Restrict who can communicate with this gateway node. In <b>Restricted Mode</b>, messages from anyone outside the allowed whitelist are silently dropped with zero data or prompt leakage.
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <label style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px; display: flex; gap: 10px; cursor: pointer; align-items: flex-start;">
+                <input type="radio" name="rbac-mode-radio" value="all" id="rbac-radio-all" checked onchange="toggleRbacFields()">
+                <div>
+                  <div style="font-weight: 600; font-size: 12.5px; color: var(--text-main);">Public Mode (All Contacts)</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Accepts inquiries from any customer or partner number globally.</div>
+                </div>
+              </label>
+
+              <label style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px; display: flex; gap: 10px; cursor: pointer; align-items: flex-start;">
+                <input type="radio" name="rbac-mode-radio" value="restricted" id="rbac-radio-restricted" onchange="toggleRbacFields()">
+                <div>
+                  <div style="font-weight: 600; font-size: 12.5px; color: #38bdf8;">Restricted Whitelist (Private)</div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Only authorized VIP numbers, team leads, or client contacts can talk.</div>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-group" id="rbac-whitelist-group" style="display: none;">
+              <label class="field-caption">Authorized Whitelist (Comma-separated phone numbers or WhatsApp JIDs):</label>
+              <input type="text" id="inp-rbac-whitelist" class="field-input field-mono" placeholder="919876543210, 917046344658, 919382468250">
+              <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">All other senders will be completely ignored with zero automated replies or database lookups.</span>
+            </div>
+
+            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 7px 16px; font-size: 12px;" onclick="saveRbacPolicy()">
+              Apply RBAC Rules to Node
+            </button>
+            <span id="rbac-save-msg" style="font-size: 11.5px; margin-left: 12px; color: #34d399; display: none;">✓ Rules updated successfully</span>
           </div>
         </div>
 
@@ -1863,8 +1907,76 @@ export function renderDashboardHtml(): string {
           }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
         }
+        // Update RBAC status badge and form fields
+        const rbacLbl = document.getElementById('tbl-rbac-mode');
+        const rbacBadge = document.getElementById('rbac-status-badge');
+        const rbacMode = data.accessMode || 'all';
+        const allowedList = data.allowedContacts || [];
+
+        if (rbacLbl) {
+          rbacLbl.innerText = rbacMode === 'restricted' ? ('Restricted (' + allowedList.length + ' VIPs)') : 'All (Public)';
+          rbacLbl.style.color = rbacMode === 'restricted' ? '#f59e0b' : '#34d399';
+        }
+        if (rbacBadge) {
+          rbacBadge.innerText = 'Node: ' + activeSessionId + ' (' + rbacMode.toUpperCase() + ')';
+        }
+
+        const radioAll = document.getElementById('rbac-radio-all');
+        const radioRestricted = document.getElementById('rbac-radio-restricted');
+        const whitelistGroup = document.getElementById('rbac-whitelist-group');
+        const whitelistInp = document.getElementById('inp-rbac-whitelist');
+
+        if (radioAll && radioRestricted) {
+          if (rbacMode === 'restricted') {
+            radioRestricted.checked = true;
+            if (whitelistGroup) whitelistGroup.style.display = 'block';
+            if (whitelistInp) whitelistInp.value = allowedList.join(', ');
+          } else {
+            radioAll.checked = true;
+            if (whitelistGroup) whitelistGroup.style.display = 'none';
+          }
+        }
       } catch (err) {
         console.debug('Failed to load session details', err);
+      }
+    }
+
+    function toggleRbacFields() {
+      const isRestricted = document.getElementById('rbac-radio-restricted')?.checked;
+      const group = document.getElementById('rbac-whitelist-group');
+      if (group) group.style.display = isRestricted ? 'block' : 'none';
+    }
+
+    async function saveRbacPolicy() {
+      const isRestricted = document.getElementById('rbac-radio-restricted')?.checked;
+      const mode = isRestricted ? 'restricted' : 'all';
+      const rawContacts = document.getElementById('inp-rbac-whitelist')?.value || '';
+      const allowedContacts = rawContacts
+        .split(',')
+        .map(c => c.trim())
+        .filter(Boolean);
+
+      const btn = document.getElementById('btn-save-rbac');
+      const msg = document.getElementById('rbac-save-msg');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/sessions/' + activeSessionId + '/access', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessMode: mode, allowedContacts })
+        });
+        if (!res.ok) throw new Error('Failed to update access control');
+        if (msg) {
+          msg.style.display = 'inline';
+          setTimeout(() => { msg.style.display = 'none'; }, 3000);
+        }
+        await loadActiveSessionDetails();
+        await refreshSessionList();
+      } catch (err) {
+        alert('RBAC update failed: ' + err.message);
+      } finally {
+        if (btn) btn.disabled = false;
       }
     }
 
