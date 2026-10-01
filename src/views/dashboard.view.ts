@@ -1157,6 +1157,214 @@ export function renderDashboardHtml(): string {
       margin-top: 18px;
     }
 
+    /* Enterprise RBAC & Access Control Styles */
+    .rbac-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .rbac-mode-card {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .rbac-mode-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: var(--bg-elevated);
+      transform: translateY(-1px);
+    }
+
+    .rbac-mode-card.is-active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.06);
+      box-shadow: 0 0 0 1px #38bdf8, 0 4px 14px rgba(56, 189, 248, 0.15);
+    }
+
+    .rbac-mode-card#card-rbac-all.is-active {
+      border-color: #34d399;
+      background: rgba(52, 211, 153, 0.06);
+      box-shadow: 0 0 0 1px #34d399, 0 4px 14px rgba(52, 211, 153, 0.15);
+    }
+
+    .rbac-mode-card#card-rbac-restricted.is-active {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.06);
+      box-shadow: 0 0 0 1px #f59e0b, 0 4px 14px rgba(245, 158, 11, 0.15);
+    }
+
+    .rbac-mode-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .rbac-mode-card.is-active .rbac-mode-icon {
+      background: rgba(56, 189, 248, 0.14);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    .rbac-mode-card#card-rbac-all.is-active .rbac-mode-icon {
+      background: rgba(52, 211, 153, 0.14);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    .rbac-mode-card#card-rbac-restricted.is-active .rbac-mode-icon {
+      background: rgba(245, 158, 11, 0.14);
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .rbac-mode-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .rbac-mode-desc {
+      font-size: 11.5px;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    .rbac-dropzone {
+      border: 1.5px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      background: rgba(22, 27, 34, 0.4);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .rbac-dropzone:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.04);
+    }
+
+    .whitelist-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .contact-chip-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding: 4px;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: var(--radius-sm);
+    }
+
+    .contact-chip {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .contact-chip-remove {
+      color: #94a3b8;
+      cursor: pointer;
+      font-weight: 700;
+      border-radius: 50%;
+      padding: 0 4px;
+      transition: all 0.15s;
+    }
+
+    .contact-chip-remove:hover {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.15);
+    }
+
+    /* Enterprise Toast Notification Stack */
+    .app-toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .app-toast {
+      pointer-events: auto;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f8fafc;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      max-width: 380px;
+      animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .app-toast.is-success {
+      border-color: rgba(52, 211, 153, 0.35);
+      background: #062b1b;
+    }
+
+    .app-toast.is-error {
+      border-color: rgba(248, 113, 113, 0.35);
+      background: #2b0f12;
+    }
+
+    .app-toast.is-warning {
+      border-color: rgba(251, 191, 36, 0.35);
+      background: #2d2006;
+    }
+
+    @keyframes slideInToast {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeOutToast {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+
     /* Global Footer */
     footer {
       border-top: 1px solid var(--border-subtle);
@@ -1503,8 +1711,6 @@ export function renderDashboardHtml(): string {
             </div>
             <div id="out-guard-text" class="console-body"></div>
           </div>
-
-          </div>
         </div>
 
         <!-- TAB: ENTERPRISE ACCESS CONTROL & RBAC WHITELIST MANAGER -->
@@ -1634,6 +1840,57 @@ export function renderDashboardHtml(): string {
               </div>
             </div>
 
+          </div>
+
+          <!-- Public Mode Active Overview Card (Visible when in Public Mode) -->
+          <div id="rbac-public-overview" style="display: block; animation: fadeIn 0.25s ease; margin-bottom: 22px;">
+            <div style="background: rgba(52, 211, 153, 0.04); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: var(--radius-md); padding: 22px;">
+              <div style="display: flex; align-items: flex-start; gap: 16px;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(52, 211, 153, 0.12); display: flex; align-items: center; justify-content: center; color: #34d399; flex-shrink: 0;">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 15px; font-weight: 700; color: #34d399; letter-spacing: -0.01em;">
+                      Public Mode Active: Global Inbound WhatsApp Traffic
+                    </div>
+                    <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3);">
+                      ● Open Gateway
+                    </span>
+                  </div>
+                  <p style="font-size: 12.5px; color: var(--text-sub); line-height: 1.6; margin-bottom: 16px;">
+                    This WhatsApp node is currently configured to accept incoming messages from <b>any contact or group</b>. Every customer who messages this number receives real-time <b>Blue Ticks (Seen)</b> read receipts and automated AI / SQL inventory answers.
+                  </p>
+
+                  <!-- 3-Column Policy Feature Badges -->
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
+                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Read Receipts</div>
+                      <div style="font-size: 13px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Blue Ticks for Everyone
+                      </div>
+                    </div>
+
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
+                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">AI / Voice Assistance</div>
+                      <div style="font-size: 13px; font-weight: 600; color: #34d399; display: flex; align-items: center; gap: 6px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+                        Full Autonomous Replies
+                      </div>
+                    </div>
+
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
+                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Private Whitelist Option</div>
+                      <div style="font-size: 12px; color: var(--text-sub);">
+                        Click <b>Restricted VIP Mode</b> above to restrict access to specific phone numbers only.
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Bottom Save Actions -->
@@ -2300,6 +2557,7 @@ export function renderDashboardHtml(): string {
       const cardAll = document.getElementById('card-rbac-all');
       const cardRestricted = document.getElementById('card-rbac-restricted');
       const workspace = document.getElementById('rbac-whitelist-workspace');
+      const publicOverview = document.getElementById('rbac-public-overview');
 
       if (pillNode) pillNode.innerText = 'Node: ' + activeSessionId;
 
@@ -2317,10 +2575,12 @@ export function renderDashboardHtml(): string {
           cardAll.classList.remove('is-active');
           cardRestricted.classList.add('is-active');
           if (workspace) workspace.style.display = 'block';
+          if (publicOverview) publicOverview.style.display = 'none';
         } else {
           cardAll.classList.add('is-active');
           cardRestricted.classList.remove('is-active');
           if (workspace) workspace.style.display = 'none';
+          if (publicOverview) publicOverview.style.display = 'block';
         }
       }
 
