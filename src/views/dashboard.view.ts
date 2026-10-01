@@ -1499,7 +1499,6 @@ export function renderDashboardHtml(): string {
               </tr>
             </table>
           </div>
-
         </div>
       </aside>
 
@@ -2005,6 +2004,11 @@ export function renderDashboardHtml(): string {
       const target = document.getElementById(id);
       if (target) target.classList.add('is-selected');
       if (tabEl) tabEl.classList.add('is-selected');
+    }
+
+    function goToRbacTab() {
+      const btn = document.getElementById('tab-btn-rbac');
+      activateTab('pane-rbac', btn);
     }
 
     function setErp(el) {
