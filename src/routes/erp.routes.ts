@@ -394,9 +394,22 @@ export async function erpRoutes(fastify: FastifyInstance) {
 
       try {
         const pdfModule: any = await import('pdf-parse');
-        const pdfParse = pdfModule.default || pdfModule;
-        const pdfData = await pdfParse(buffer);
-        const extractedText = (pdfData.text || '').trim();
+        let extractedText = '';
+        let pageCount = 1;
+
+        if (pdfModule.PDFParse) {
+          const parser = new pdfModule.PDFParse({ data: buffer });
+          await parser.load();
+          const result = await parser.getText();
+          extractedText = (result.text || '').trim();
+          pageCount = result.total || (result.pages ? result.pages.length : 1);
+          await parser.destroy();
+        } else {
+          const pdfParse = pdfModule.default || pdfModule;
+          const pdfData = await pdfParse(buffer);
+          extractedText = (pdfData.text || '').trim();
+          pageCount = pdfData.numpages || 1;
+        }
 
         if (!extractedText) {
           return reply.status(400).send({
@@ -417,13 +430,13 @@ export async function erpRoutes(fastify: FastifyInstance) {
 
         await auditLogService.log({
           eventType: 'PDF_PARSED',
-          details: { fileName, pages: pdfData.numpages, charCount: extractedText.length },
+          details: { fileName, pages: pageCount, charCount: extractedText.length },
         });
 
         return reply.send({
           success: true,
           fileName,
-          pages: pdfData.numpages,
+          pages: pageCount,
           charactersExtracted: extractedText.length,
           preview: extractedText.substring(0, 300) + '...',
           document: doc,
