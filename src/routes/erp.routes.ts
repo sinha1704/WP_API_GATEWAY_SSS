@@ -293,4 +293,77 @@ export async function erpRoutes(fastify: FastifyInstance) {
       }
     }
   );
+
+  /**
+   * 8. RAG Enterprise Knowledge Search Endpoint
+   */
+  fastify.post(
+    '/api/rag/search',
+    {
+      schema: {
+        description: 'Search company policies, FAQs, and documentation using Enterprise RAG Engine',
+        tags: ['Voice & ERP AI'],
+        body: z.object({
+          query: z.string().min(1),
+          topK: z.number().optional().default(3),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { query, topK } = request.body as { query: string; topK?: number };
+      const { ragKnowledgeService } = await import('../services/rag.service.js');
+      const docs = await ragKnowledgeService.searchRelevantKnowledge(query, topK);
+      return reply.send({
+        success: true,
+        query,
+        count: docs.length,
+        results: docs,
+      });
+    }
+  );
+
+  /**
+   * 9. List and Add RAG Documents Endpoint
+   */
+  fastify.get(
+    '/api/rag/documents',
+    {
+      schema: {
+        description: 'List all verified enterprise policy and knowledge documents',
+        tags: ['Voice & ERP AI'],
+      },
+    },
+    async (request, reply) => {
+      const { ragKnowledgeService } = await import('../services/rag.service.js');
+      return reply.send({
+        success: true,
+        documents: ragKnowledgeService.listAllDocuments(),
+      });
+    }
+  );
+
+  fastify.post(
+    '/api/rag/documents',
+    {
+      schema: {
+        description: 'Upload a new policy or document into the RAG knowledge store',
+        tags: ['Voice & ERP AI'],
+        body: z.object({
+          title: z.string().min(1),
+          category: z.string().default('Policy'),
+          content: z.string().min(5),
+          keywords: z.array(z.string()).optional(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const body = request.body as { title: string; category: string; content: string; keywords?: string[] };
+      const { ragKnowledgeService } = await import('../services/rag.service.js');
+      const added = await ragKnowledgeService.addDocument(body);
+      return reply.send({
+        success: true,
+        document: added,
+      });
+    }
+  );
 }

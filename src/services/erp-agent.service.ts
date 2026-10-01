@@ -2,6 +2,7 @@ import axios from 'axios';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import { erpDatabaseService, ERP_SCHEMA_METADATA } from './erp-database.service.js';
+import { AiBridgeService } from './ai.service.js';
 
 export interface QueryPipelineResult {
   question: string;
@@ -160,7 +161,7 @@ Return ONLY raw JSON, with no markdown code blocks or additional text.`;
 
       return {
         isSql: false,
-        fallbackAnswer: `I received your inquiry: "${question}". Please ask about inventory, stock levels, or total sales.`,
+        fallbackAnswer: AiBridgeService.getInstance().generateSmartLocalReply(question),
       };
     }
   }

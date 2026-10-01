@@ -1160,156 +1160,185 @@ export function renderDashboardHtml(): string {
     /* Enterprise RBAC & Access Control Styles */
     .rbac-mode-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
     }
 
     .rbac-mode-card {
-      background: var(--bg-surface);
-      border: 1.5px solid var(--border-default);
+      background: var(--bg-canvas);
+      border: 1.5px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 16px 18px;
+      padding: 14px 16px;
       display: flex;
-      gap: 14px;
+      flex-direction: column;
+      gap: 8px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
+      user-select: none;
     }
 
     .rbac-mode-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      background: var(--bg-elevated);
-      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.03);
+    }
+
+    .rbac-mode-card .rbac-card-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-default);
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
     }
 
     .rbac-mode-card.is-active {
       border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.06);
-      box-shadow: 0 0 0 1px #38bdf8, 0 4px 14px rgba(56, 189, 248, 0.15);
+      background: rgba(56, 189, 248, 0.05);
+    }
+
+    .rbac-mode-card.is-active .rbac-card-check {
+      background: #38bdf8;
+      border-color: #38bdf8;
     }
 
     .rbac-mode-card#card-rbac-all.is-active {
       border-color: #34d399;
-      background: rgba(52, 211, 153, 0.06);
-      box-shadow: 0 0 0 1px #34d399, 0 4px 14px rgba(52, 211, 153, 0.15);
+      background: rgba(52, 211, 153, 0.05);
+    }
+
+    .rbac-mode-card#card-rbac-all.is-active .rbac-card-check {
+      background: #34d399;
+      border-color: #34d399;
     }
 
     .rbac-mode-card#card-rbac-restricted.is-active {
       border-color: #f59e0b;
-      background: rgba(245, 158, 11, 0.06);
-      box-shadow: 0 0 0 1px #f59e0b, 0 4px 14px rgba(245, 158, 11, 0.15);
+      background: rgba(245, 158, 11, 0.05);
     }
 
-    .rbac-mode-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+    .rbac-mode-card#card-rbac-restricted.is-active .rbac-card-check {
+      background: #f59e0b;
+      border-color: #f59e0b;
+    }
+
+    .rbac-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-sub);
-      flex-shrink: 0;
-      transition: all 0.2s ease;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      transition: all 0.18s ease;
     }
 
-    .rbac-mode-card.is-active .rbac-mode-icon {
-      background: rgba(56, 189, 248, 0.14);
-      color: #38bdf8;
-      border-color: rgba(56, 189, 248, 0.3);
-    }
-
-    .rbac-mode-card#card-rbac-all.is-active .rbac-mode-icon {
-      background: rgba(52, 211, 153, 0.14);
+    .rbac-mode-card#card-rbac-all.is-active .rbac-card-icon {
+      background: rgba(52, 211, 153, 0.12);
       color: #34d399;
-      border-color: rgba(52, 211, 153, 0.3);
+      border-color: rgba(52, 211, 153, 0.2);
     }
 
-    .rbac-mode-card#card-rbac-restricted.is-active .rbac-mode-icon {
-      background: rgba(245, 158, 11, 0.14);
+    .rbac-mode-card#card-rbac-restricted.is-active .rbac-card-icon {
+      background: rgba(245, 158, 11, 0.12);
       color: #f59e0b;
-      border-color: rgba(245, 158, 11, 0.3);
+      border-color: rgba(245, 158, 11, 0.2);
     }
 
-    .rbac-mode-title {
-      font-size: 13.5px;
+    .rbac-card-title {
+      font-size: 12.5px;
       font-weight: 700;
       color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 5px;
+      line-height: 1.3;
     }
 
-    .rbac-mode-desc {
-      font-size: 11.5px;
-      color: var(--text-sub);
+    .rbac-card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
       line-height: 1.5;
     }
 
     .rbac-dropzone {
-      border: 1.5px dashed var(--border-default);
+      border: 1.5px dashed rgba(56, 189, 248, 0.25);
       border-radius: var(--radius-md);
-      padding: 20px;
-      background: rgba(22, 27, 34, 0.4);
+      padding: 16px 20px;
+      background: rgba(56, 189, 248, 0.02);
       cursor: pointer;
-      text-align: center;
-      transition: all 0.2s ease;
+      transition: all 0.18s ease;
     }
 
     .rbac-dropzone:hover {
       border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.04);
+      background: rgba(56, 189, 248, 0.05);
     }
 
     .whitelist-stats-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .contact-chip-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      max-height: 240px;
+      gap: 7px;
+      min-height: 60px;
+      max-height: 200px;
       overflow-y: auto;
-      padding: 4px;
-      background: rgba(0, 0, 0, 0.15);
-      border-radius: var(--radius-sm);
+      padding: 4px 2px;
     }
 
     .contact-chip {
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
       color: #e2e8f0;
       padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
       font-family: var(--font-mono);
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       animation: fadeIn 0.15s ease;
+      transition: all 0.12s ease;
+    }
+
+    .contact-chip:hover {
+      background: rgba(56, 189, 248, 0.14);
     }
 
     .contact-chip-remove {
-      color: #94a3b8;
+      color: #64748b;
       cursor: pointer;
       font-weight: 700;
-      border-radius: 50%;
-      padding: 0 4px;
-      transition: all 0.15s;
+      line-height: 1;
+      transition: color 0.12s;
     }
 
     .contact-chip-remove:hover {
       color: #f87171;
-      background: rgba(248, 113, 113, 0.15);
+    }
+
+    .rbac-section-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 8px;
     }
 
     /* Enterprise Toast Notification Stack */
@@ -1533,6 +1562,10 @@ export function renderDashboardHtml(): string {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span>Access & RBAC</span>
           </div>
+          <div class="tab-item" id="tab-btn-rag" onclick="activateTab('pane-rag', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+            <span>Knowledge RAG</span>
+          </div>
         </div>
 
         <!-- TAB 1: Telemetry Stream Chart -->
@@ -1540,7 +1573,7 @@ export function renderDashboardHtml(): string {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <span class="card-title" style="font-size: 11.5px;">Real-Time Heap & RSS Memory Utilization (Streamed every 3s)</span>
             <div style="display: flex; gap: 16px; font-size: 11.5px; color: var(--text-muted);">
-              <span><span style="color: #2ea043; font-weight: 700;">●</span> Heap Used</span>
+              <span><span style="color: #2ea043; font-weight: 700;">●</span> Heap Used</span>
               <span><span style="color: #1f6feb; font-weight: 700;">--</span> Process RSS</span>
             </div>
           </div>
@@ -1705,202 +1738,207 @@ export function renderDashboardHtml(): string {
 
           <div id="out-guard-box" class="result-console">
             <div class="console-header">
-              <span>Guardrail Analysis & Polite Customer Defusal</span>
+              <span>Guardrail Analysis &amp; Polite Customer Defusal</span>
               <span id="out-guard-badge" style="font-weight: 600;">Status</span>
             </div>
             <div id="out-guard-text" class="console-body"></div>
           </div>
         </div>
 
-        <!-- TAB: ENTERPRISE ACCESS CONTROL & RBAC WHITELIST MANAGER -->
-        <div id="pane-rbac" class="tab-content-area">
-          <!-- Header Bar -->
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-            <div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">Enterprise Access Control & RBAC Policy</h3>
-                <span class="brand-badge" id="rbac-node-pill" style="font-size: 11px; padding: 3px 9px;">Node: session-1</span>
-                <span class="brand-badge" id="rbac-mode-indicator" style="font-size: 11px; padding: 3px 9px;">Loading...</span>
+        <div id="pane-rbac" class="tab-content-area" style="padding: 0; overflow-y: auto;">
+
+          <!-- RBAC Section Header -->
+          <div style="padding: 14px 20px 12px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </div>
-              <p style="font-size: 12px; color: var(--text-sub); margin-top: 5px; margin-bottom: 0; line-height: 1.55; max-width: 820px;">
-                Enforce zero-trust message filtering at the gateway socket layer. In <b>Restricted VIP Whitelist</b> mode, any message from an unlisted number is instantly dropped before read receipts trigger — <b>zero blue ticks, zero AI prompt leakage, zero database ERP exposure.</b>
-              </p>
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-main); letter-spacing: -0.01em;">Access Control &amp; RBAC Policy</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                  Node: <span id="rbac-node-pill" style="color: #38bdf8; font-family: var(--font-mono);">session-1</span>
+                  &nbsp;&bull;&nbsp;
+                  Policy: <span id="rbac-mode-indicator" style="font-family: var(--font-mono); color: var(--text-sub);">Loading...</span>
+                </div>
+              </div>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <button class="btn btn-ghost" style="font-size: 12px; padding: 7px 14px;" onclick="exportWhitelistCsv()" title="Export current whitelist to CSV">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <div style="display: flex; gap: 7px; align-items: center;">
+              <button class="btn btn-ghost" style="font-size: 11px; padding: 5px 11px; gap: 5px;" onclick="exportWhitelistCsv()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                 Export CSV
               </button>
-              <button class="btn btn-solid-emerald" id="btn-save-rbac-top" style="font-size: 12px; padding: 7px 16px;" onclick="saveRbacPolicy()">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                Save & Apply Policy
+              <button class="btn btn-solid-emerald" id="btn-save-rbac-top" style="font-size: 11px; padding: 5px 13px; gap: 5px;" onclick="saveRbacPolicy()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save &amp; Apply
               </button>
             </div>
           </div>
 
-          <!-- Policy Selector Cards -->
-          <div class="rbac-mode-grid">
-            <div class="rbac-mode-card" id="card-rbac-all" onclick="selectRbacMode('all')">
-              <div class="rbac-mode-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              </div>
-              <div style="flex: 1;">
-                <div class="rbac-mode-title">
-                  <span>Public Mode (Everyone Allowed)</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">All Numbers</span>
+          <!-- RBAC Body -->
+          <div style="padding: 16px 20px 20px;">
+
+            <!-- Step 1: Mode Selection -->
+            <div class="rbac-section-label">Step 1 &mdash; Choose Access Policy</div>
+            <div class="rbac-mode-grid">
+
+              <!-- Public Mode Card -->
+              <div class="rbac-mode-card" id="card-rbac-all" onclick="selectRbacMode('all')">
+                <div class="rbac-card-check"></div>
+                <div class="rbac-card-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 </div>
-                <div class="rbac-mode-desc">
-                  Anyone can send a message. The bot automatically marks messages as <b>Seen (Blue Ticks)</b> and sends AI / ERP automated replies to all contacts.
+                <div class="rbac-card-title">Public Mode</div>
+                <div class="rbac-card-desc">Every incoming message gets Blue Ticks and full AI / ERP replies. No restrictions applied.</div>
+                <div style="margin-top: 2px;">
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.2);">All Numbers Accepted</span>
+                </div>
+              </div>
+
+              <!-- Restricted Mode Card -->
+              <div class="rbac-mode-card" id="card-rbac-restricted" onclick="selectRbacMode('restricted')">
+                <div class="rbac-card-check"></div>
+                <div class="rbac-card-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </div>
+                <div class="rbac-card-title">Restricted VIP Mode</div>
+                <div class="rbac-card-desc">Only whitelisted numbers get Blue Ticks and replies. All others are silently dropped.</div>
+                <div style="margin-top: 2px;">
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);">Whitelist Only</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Public Mode: Status Banner -->
+            <div id="rbac-public-overview" style="display: block; animation: fadeIn 0.2s ease;">
+              <div style="background: rgba(52,211,153,0.04); border: 1px solid rgba(52,211,153,0.18); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: #34d399; flex-shrink: 0; box-shadow: 0 0 6px rgba(52,211,153,0.5); animation: pulse 2s infinite;"></div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: #34d399; margin-bottom: 2px;">Public Gateway Active</div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">All incoming messages processed. Blue Ticks sent to everyone. Switch to <b style="color: var(--text-sub);">Restricted VIP Mode</b> above to enable whitelist filtering.</div>
                 </div>
               </div>
             </div>
 
-            <div class="rbac-mode-card" id="card-rbac-restricted" onclick="selectRbacMode('restricted')">
-              <div class="rbac-mode-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </div>
-              <div style="flex: 1;">
-                <div class="rbac-mode-title">
-                  <span>Restricted VIP Mode (Only Whitelist Allowed)</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Whitelist Only</span>
-                </div>
-                <div class="rbac-mode-desc">
-                  <b>Only the phone numbers added to the whitelist below</b> will get <b>Seen (Blue Ticks)</b> and automated replies. Messages from any unlisted number are <b>completely ignored with zero blue ticks and zero replies</b>.
-                </div>
-              </div>
-            </div>
-          </div>
+            <!-- Restricted Whitelist Workspace -->
+            <div id="rbac-whitelist-workspace" style="display: none; animation: fadeIn 0.2s ease;">
 
-          <!-- Restricted Whitelist Management Workspace -->
-          <div id="rbac-whitelist-workspace" style="display: none; animation: fadeIn 0.25s ease;">
-            
-            <!-- Bulk Upload Zone -->
-            <div style="margin-bottom: 22px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label class="field-caption" style="margin-bottom: 0; font-weight: 700; color: var(--text-main);">
-                  Bulk Upload Phone Numbers (CSV, TXT, Excel):
-                </label>
-                <span style="font-size: 11px; color: var(--text-muted);">
-                  Supports 10-digit mobile numbers or with country code (e.g., +91, 91)
-                </span>
-              </div>
-              
-              <div class="rbac-dropzone" id="rbac-drop-area" onclick="document.getElementById('rbac-file-input').click()">
-                <input type="file" id="rbac-file-input" accept=".csv, .txt, .tsv, .xlsx, .xls" style="display: none;" onchange="handleRbacFileUpload(this.files)">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 14px;">
-                  <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.14); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                  </div>
-                  <div style="text-align: left;">
-                    <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);">
-                      Click to choose or drag & drop CSV, TXT, or Excel files here
-                    </div>
-                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
-                      Reads contact lists from files, automatically cleans spaces/symbols, and removes duplicates.
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div id="rbac-upload-status" style="font-size: 12px; margin-top: 8px; display: none;"></div>
-            </div>
+              <div class="rbac-section-label" style="margin-top: 2px;">Step 2 &mdash; Manage Whitelist</div>
 
-            <!-- Manual Single Contact Input -->
-            <div style="margin-bottom: 22px;">
-              <label class="field-caption" style="font-weight: 700; color: var(--text-main);">Add Phone Number Manually:</label>
-              <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                  <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Enter phone number (e.g. 7063644658 or 917063644658) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
-                </div>
-                <button class="btn btn-ghost" style="padding: 0 18px;" onclick="addSingleContact()">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
-                  Add Number
-                </button>
-              </div>
-            </div>
+              <!-- Two-column: upload + manual add -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
 
-            <!-- Whitelisted Contacts Overview & Tags Container -->
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px;">
-              <div class="whitelist-stats-bar">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-weight: 700; color: var(--text-main); font-size: 13.5px;">Allowed Numbers Whitelist</span>
-                  <span id="whitelist-count-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 12px; font-family: var(--font-mono);">0 numbers</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <input type="text" id="inp-filter-whitelist" class="field-input field-mono" style="padding: 5px 10px; font-size: 11.5px; width: 200px;" placeholder="Search whitelist..." oninput="filterContactChips()">
-                  <button class="btn btn-ghost" style="font-size: 11.5px; padding: 5px 10px;" onclick="clearAllWhitelistedContacts()">Clear All</button>
-                </div>
-              </div>
-
-              <!-- Visual Chips List -->
-              <div class="contact-chip-container" id="whitelist-chips-box">
-                <div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center; width: 100%;">
-                  No authorized numbers added yet. Add numbers above or upload a CSV file to allow them.
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Public Mode Active Overview Card (Visible when in Public Mode) -->
-          <div id="rbac-public-overview" style="display: block; animation: fadeIn 0.25s ease; margin-bottom: 22px;">
-            <div style="background: rgba(52, 211, 153, 0.04); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: var(--radius-md); padding: 22px;">
-              <div style="display: flex; align-items: flex-start; gap: 16px;">
-                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(52, 211, 153, 0.12); display: flex; align-items: center; justify-content: center; color: #34d399; flex-shrink: 0;">
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
-                </div>
-                <div style="flex: 1;">
-                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                    <div style="font-size: 15px; font-weight: 700; color: #34d399; letter-spacing: -0.01em;">
-                      Public Mode Active: Global Inbound WhatsApp Traffic
-                    </div>
-                    <span style="font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3);">
-                      ● Open Gateway
-                    </span>
-                  </div>
-                  <p style="font-size: 12.5px; color: var(--text-sub); line-height: 1.6; margin-bottom: 16px;">
-                    This WhatsApp node is currently configured to accept incoming messages from <b>any contact or group</b>. Every customer who messages this number receives real-time <b>Blue Ticks (Seen)</b> read receipts and automated AI / SQL inventory answers.
-                  </p>
-
-                  <!-- 3-Column Policy Feature Badges -->
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
-                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Read Receipts</div>
-                      <div style="font-size: 13px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Blue Ticks for Everyone
-                      </div>
-                    </div>
-
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
-                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">AI / Voice Assistance</div>
-                      <div style="font-size: 13px; font-weight: 600; color: #34d399; display: flex; align-items: center; gap: 6px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-                        Full Autonomous Replies
-                      </div>
-                    </div>
-
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px;">
-                      <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Private Whitelist Option</div>
-                      <div style="font-size: 12px; color: var(--text-sub);">
-                        Click <b>Restricted VIP Mode</b> above to restrict access to specific phone numbers only.
-                      </div>
+                <!-- Bulk Upload -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px;">Bulk Upload (CSV / TXT / Excel)</div>
+                  <div class="rbac-dropzone" id="rbac-drop-area" onclick="document.getElementById('rbac-file-input').click()">
+                    <input type="file" id="rbac-file-input" accept=".csv,.txt,.tsv,.xlsx,.xls" style="display:none;" onchange="handleRbacFileUpload(this.files)">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                      <span style="font-size: 11.5px; font-weight: 600; color: var(--text-sub);">Click or drag &amp; drop file</span>
+                      <span style="font-size: 10.5px; color: var(--text-muted);">Cleans &amp; deduplicates automatically</span>
                     </div>
                   </div>
+                  <div id="rbac-upload-status" style="font-size: 11px; margin-top: 6px; display: none;"></div>
+                </div>
 
+                <!-- Manual Add -->
+                <div>
+                  <div style="font-size: 11px; font-weight: 600; color: var(--text-sub); margin-bottom: 6px;">Add Single Number</div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="text" id="inp-rbac-single" class="field-input field-mono" style="font-size: 12px;" placeholder="e.g. 7063644658 or 917063..." onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
+                    <button class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 8px; gap: 6px;" onclick="addSingleContact()">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                      Add to Whitelist
+                    </button>
+                    <div style="font-size: 10.5px; color: var(--text-muted); line-height: 1.4;">10-digit or with country code (+91 / 91). Press Enter to quickly add.</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Whitelist Contact Panel -->
+              <div style="border: 1px solid var(--border-subtle); border-radius: var(--radius-md); overflow: hidden;">
+                <div style="background: var(--bg-subtle); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle);">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">Allowed Numbers</span>
+                    <span id="whitelist-count-badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 10.5px; font-weight: 700; padding: 1px 8px; border-radius: 10px; font-family: var(--font-mono);">0</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 7px;">
+                    <input type="text" id="inp-filter-whitelist" class="field-input field-mono" style="padding: 4px 9px; font-size: 11px; width: 160px;" placeholder="Filter numbers..." oninput="filterContactChips()">
+                    <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 9px; color: #f87171;" onclick="clearAllWhitelistedContacts()">Clear All</button>
+                  </div>
+                </div>
+                <div style="padding: 12px 14px; background: var(--bg-canvas); min-height: 72px;">
+                  <div class="contact-chip-container" id="whitelist-chips-box">
+                    <div style="color: var(--text-muted); font-size: 11.5px; padding: 12px 0; text-align: center; width: 100%;">
+                      No numbers added yet. Upload a CSV or add numbers manually above.
+                    </div>
+                  </div>
                 </div>
               </div>
+
             </div>
-          </div>
 
-          <!-- Bottom Save Actions -->
-          <div style="display: flex; align-items: center; gap: 14px; border-top: 1px solid var(--border-subtle); padding-top: 18px;">
-            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 10px 24px; font-size: 13px;" onclick="saveRbacPolicy()">
-              Apply RBAC Rules to Node
-            </button>
-            <span id="rbac-save-msg" style="font-size: 12px; color: #34d399; font-weight: 600; display: none;"></span>
-          </div>
+            <!-- Save Bar -->
+            <div style="margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px;">
+              <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 8px 20px; font-size: 12.5px; gap: 7px;" onclick="saveRbacPolicy()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Apply RBAC Policy to Node
+              </button>
+              <span id="rbac-save-msg" style="font-size: 11.5px; color: #34d399; font-weight: 600; display: none;"></span>
+            </div>
 
+          </div>
         </div>
+
+        <!-- TAB: ENTERPRISE KNOWLEDGE RAG ENGINE -->
+        <div id="pane-rag" class="tab-content-area">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">Enterprise Knowledge RAG Engine (100% Free Production Tier)</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Verified company policies, warranties, and return terms retrieved in real-time without hallucination.
+              </div>
+            </div>
+            <span class="brand-badge" style="background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3);">RAG Active</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--emerald-400); display: block; margin-bottom: 8px;">Semantic Knowledge Search</span>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="rag-search-inp" class="field-input" placeholder="e.g. What is our return policy? or warranty terms" value="What is our return and refund policy?">
+                <button class="btn btn-solid-emerald" style="padding: 0 14px; font-size: 12px;" onclick="testRagSearch()">Search RAG</button>
+              </div>
+              <div class="chip-cloud" style="margin-top: 8px;">
+                <span class="chip" onclick="document.getElementById('rag-search-inp').value='What is our return and refund policy?'; testRagSearch();">Return Policy</span>
+                <span class="chip" onclick="document.getElementById('rag-search-inp').value='What is the warranty on electronics?'; testRagSearch();">Warranty</span>
+                <span class="chip" onclick="document.getElementById('rag-search-inp').value='How long does delivery take?'; testRagSearch();">Shipping Time</span>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px;">
+              <span style="font-size: 12px; font-weight: 600; color: #38bdf8; display: block; margin-bottom: 8px;">Add Policy / Document</span>
+              <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                <input type="text" id="rag-new-title" class="field-input" placeholder="Title (e.g. VIP Discount Policy)" style="flex: 2;">
+                <input type="text" id="rag-new-cat" class="field-input" placeholder="Category" value="Policy" style="flex: 1;">
+              </div>
+              <textarea id="rag-new-content" class="field-input" style="height: 48px; font-size: 11.5px; margin-bottom: 8px;" placeholder="Document content..."></textarea>
+              <button class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 6px;" onclick="addRagDocument()">Upload to Knowledge Store</button>
+            </div>
+          </div>
+
+          <div id="rag-results-card" style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 14px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; display: flex; justify-content: space-between;">
+              <span>Verified Knowledge Store Documents</span>
+              <span id="rag-doc-count" style="color: var(--text-muted); font-size: 11px;">Loading...</span>
+            </div>
+            <div id="rag-doc-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto;">
+            </div>
+          </div>
+        </div>
+
 
         <!-- TAB: AUTHENTIC WHATSAPP LIVE DEVICE SIMULATOR -->
         <div id="pane-simulator" class="tab-content-area">
@@ -1935,7 +1973,7 @@ export function renderDashboardHtml(): string {
 
             <div class="wa-chat-stream" id="wa-chat-stream">
               <div class="wa-bubble inbound">
-                <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
+                <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
                 <div class="wa-msg-meta">10:30 AM</div>
               </div>
             </div>
@@ -2021,6 +2059,86 @@ export function renderDashboardHtml(): string {
 
     function setGuard(el) {
       document.getElementById('inp-guard').value = el.innerText.replace(/^[^:]+:\s*/, '').trim();
+    }
+
+    async function loadRagDocs() {
+      try {
+        const res = await fetch('/api/rag/documents');
+        if (!res.ok) return;
+        const data = await res.json();
+        const listEl = document.getElementById('rag-doc-list');
+        const countEl = document.getElementById('rag-doc-count');
+        if (countEl) countEl.innerText = (data.documents?.length || 0) + ' Documents Active';
+        if (listEl && data.documents) {
+          listEl.innerHTML = data.documents.map(d => 
+            '<div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 12px;">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">' +
+                '<span style="font-weight: 600; font-size: 12px; color: var(--emerald-400);">' + (d.title || '') + '</span>' +
+                '<span class="brand-badge" style="font-size: 10px; padding: 2px 6px;">' + (d.category || '') + '</span>' +
+              '</div>' +
+              '<p style="font-size: 11.5px; color: var(--text-sub); line-height: 1.4; margin: 0;">' + (d.content || '') + '</p>' +
+            '</div>'
+          ).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function testRagSearch() {
+      const q = document.getElementById('rag-search-inp').value.trim();
+      if (!q) return;
+      try {
+        const res = await fetch('/api/rag/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q })
+        });
+        const data = await res.json();
+        const listEl = document.getElementById('rag-doc-list');
+        const countEl = document.getElementById('rag-doc-count');
+        if (countEl) countEl.innerText = data.results.length + ' Matches Found';
+        if (listEl && data.results) {
+          if (data.results.length === 0) {
+            listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 10px;">No matching policy found for: "' + q + '"</div>';
+            return;
+          }
+          listEl.innerHTML = data.results.map(d => 
+            '<div style="background: rgba(16,185,129,0.06); border: 1px solid var(--emerald-500); border-radius: var(--radius-sm); padding: 10px 12px;">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">' +
+                '<span style="font-weight: 700; font-size: 12px; color: var(--emerald-400);">✓ Match: ' + (d.title || '') + '</span>' +
+                '<span class="brand-badge" style="font-size: 10px;">' + (d.category || '') + '</span>' +
+              '</div>' +
+              '<p style="font-size: 11.5px; color: var(--text-main); line-height: 1.4; margin: 0;">' + (d.content || '') + '</p>' +
+            '</div>'
+          ).join('');
+        }
+      } catch (err) {
+        showToast('RAG search error: ' + err.message, 'error');
+      }
+    }
+
+    async function addRagDocument() {
+      const title = document.getElementById('rag-new-title').value.trim();
+      const category = document.getElementById('rag-new-cat').value.trim() || 'Policy';
+      const content = document.getElementById('rag-new-content').value.trim();
+      if (!title || !content) {
+        showToast('Please provide both document title and content', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('/api/rag/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, category, content })
+        });
+        if (res.ok) {
+          showToast('Document uploaded to RAG Knowledge Store!', 'success');
+          document.getElementById('rag-new-title').value = '';
+          document.getElementById('rag-new-content').value = '';
+          await loadRagDocs();
+        }
+      } catch (err) {
+        showToast('Upload error: ' + err.message, 'error');
+      }
     }
 
     // Modal controls: Dynamically auto-generates next session number (e.g. session-2, session-3)
@@ -2430,7 +2548,7 @@ export function renderDashboardHtml(): string {
             <div class="account-tile \${isSelected ? 'is-active' : ''}" onclick="selectActiveSession('\${s.id}')">
               <div>
                 <div class="node-title">
-                  <span style="color: \${isConn ? 'var(--emerald-400)' : 'var(--amber-500)'}; font-size: 10px;">●</span> \${s.id}
+                  <span style="color: \${isConn ? 'var(--emerald-400)' : 'var(--amber-500)'}; font-size: 10px;">●</span> \${s.id}
                 </div>
                 <div class="node-sub">\${phone}</div>
               </div>
@@ -3145,7 +3263,7 @@ export function renderDashboardHtml(): string {
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         stream.innerHTML = \`
           <div class="wa-bubble inbound">
-            <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
+            <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
             <div class="wa-msg-meta">\${timeStr}</div>
           </div>
         \`;
@@ -3162,7 +3280,7 @@ export function renderDashboardHtml(): string {
       const randomQuery = sampleQueries[Math.floor(Math.random() * sampleQueries.length)];
       const inp = document.getElementById('wa-sim-input');
       if (inp) {
-        inp.value = '🎙️ [Voice Note]: "' + randomQuery + '"';
+        inp.value = '🎙️ï¸ [Voice Note]: "' + randomQuery + '"';
         sendSimMessage();
       }
     }
@@ -3284,7 +3402,7 @@ export function renderDashboardHtml(): string {
 
         const errorBubble = document.createElement('div');
         errorBubble.className = 'wa-bubble inbound';
-        errorBubble.innerHTML = '<div style="color: #f87171;">⚠️ Network error: ' + err.message + '</div><div class="wa-msg-meta">' + timeStr + '</div>';
+        errorBubble.innerHTML = '<div style="color: #f87171;">⚠️ï¸ Network error: ' + err.message + '</div><div class="wa-msg-meta">' + timeStr + '</div>';
         stream.appendChild(errorBubble);
         stream.scrollTop = stream.scrollHeight;
       } finally {
@@ -3301,6 +3419,7 @@ export function renderDashboardHtml(): string {
       updateTelemetry();
       refreshSessionList();
       loadActiveSessionDetails();
+      loadRagDocs();
       setInterval(updateTelemetry, 3000);
       setInterval(refreshSessionList, 6000);
       setInterval(loadActiveSessionDetails, 8000);

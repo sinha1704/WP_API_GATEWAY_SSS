@@ -16,15 +16,23 @@ services:
       - key: AI_BRIDGE_ENABLED
         value: "true"
       - key: AI_PROVIDER
-        value: gemini
+        value: openai
       - key: AI_API_KEY
         sync: false
       - key: AI_MODEL
-        value: gemini-3.5-flash-lite
+        value: openai/gpt-oss-20b
+      - key: GROQ_API_KEY
+        sync: false
       - key: VOICE_QUERY_ENABLED
         value: "true"
+      - key: VOICE_TRANSCRIPTION_PROVIDER
+        value: groq
       - key: ERP_QUERY_ENABLED
         value: "true"
+      - key: ERP_LLM_PROVIDER
+        value: groq
+      - key: ERP_DB_TYPE
+        value: mock
       - key: PRESENCE_MIN_DELAY_MS
         value: "1500"
       - key: PRESENCE_MAX_DELAY_MS

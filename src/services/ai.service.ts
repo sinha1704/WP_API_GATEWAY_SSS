@@ -46,9 +46,10 @@ HUMAN WHATSAPP CHAT PERSONA & GUIDELINES:
 4. DO NOT use bullet points, corporate headings, rigid numbered lists, or artificial boilerplate templates.
 5. Keep answers concise, clear, and direct. Break sentences naturally as a human texter would.
 6. MANDATORY LANGUAGE MATCHING:
-   - If the user writes or speaks in Bengali (বাংলা or Banglish like "ki korcho", "amar khide payeche"), you MUST reply in natural, authentic Bengali (বাংলা). Never reply in English!
-   - If the user writes or speaks in Hindi (हिन्दी or Hinglish like "kya kar rahe ho", "mujhe bhookh lagi hai"), you MUST reply in natural Hindi (हिन्दी). Never reply in English!
+   - If the user writes or speaks in Bengali (বাংলা or Banglish like "ki korcho", "kemon acho"), you MUST reply in natural, authentic Bengali (বাংলা).
+   - If the user writes or speaks in Hindi (हिन्दी or Hinglish like "kya kar rahe ho", "kaise ho"), you MUST reply in natural Hindi (हिन्दी).
    - If the user writes in English, reply in English.
+   - If the user writes in ANY OTHER language (e.g. Spanish, French, Arabic, German, Tamil, Telugu, etc.), detect it and reply in that EXACT same language! Never force English onto non-English customers.
    - Match the exact emotion, tone, and language of the sender.
 
 CONFIDENTIALITY & SECURITY GUARDRAILS:
@@ -62,17 +63,33 @@ CONFIDENTIALITY & SECURITY GUARDRAILS:
       return safetyCheck;
     }
 
+    // Enterprise RAG Pipeline: Retrieve relevant company policies, warranty, and documentation
+    let ragContext = '';
+    try {
+      const { ragKnowledgeService } = await import('./rag.service.js');
+      const matchedDocs = await ragKnowledgeService.searchRelevantKnowledge(userMessage, 2);
+      if (matchedDocs.length > 0) {
+        ragContext = `\n\nOFFICIAL COMPANY KNOWLEDGE BASE & VERIFIED POLICIES (RAG):\n` +
+          matchedDocs.map((d) => `[${d.title}]: ${d.content}`).join('\n\n') +
+          `\n\nInstructions: Use the above verified facts to accurately answer the question. If asked about return/warranty/shipping/hours, stick precisely to these facts.`;
+      }
+    } catch (ragErr: any) {
+      logger.debug({ err: ragErr.message }, 'RAG context retrieval skipped');
+    }
+
+    const fullSystemPrompt = systemPrompt + ragContext;
+
     // Check if the API key is a dummy placeholder
     const isPlaceholderKey = !config.AI_API_KEY || config.AI_API_KEY.includes('your_api_key') || config.AI_API_KEY.length < 10;
 
     if (!isPlaceholderKey) {
       try {
         if (config.AI_PROVIDER === 'openai' || config.AI_PROVIDER === 'custom') {
-          return await this.callOpenAiCompatible(systemPrompt, userMessage);
+          return await this.callOpenAiCompatible(fullSystemPrompt, userMessage);
         } else if (config.AI_PROVIDER === 'gemini') {
-          return await this.callGemini(systemPrompt, userMessage);
+          return await this.callGemini(fullSystemPrompt, userMessage);
         } else if (config.AI_PROVIDER === 'anthropic') {
-          return await this.callAnthropic(systemPrompt, userMessage);
+          return await this.callAnthropic(fullSystemPrompt, userMessage);
         }
       } catch (err: any) {
         logger.error(
@@ -140,7 +157,7 @@ CONFIDENTIALITY & SECURITY GUARDRAILS:
    * Smart conversational human-like fallback (runs locally without any external API keys)
    * 100% natural person vibe, zero robot boilerplate or bullet points
    */
-  private generateSmartLocalReply(userMessage: string): string {
+  public generateSmartLocalReply(userMessage: string): string {
     const lower = userMessage.toLowerCase().trim();
     const isBengali =
       /[\u0980-\u09FF]/.test(userMessage) ||
@@ -199,6 +216,23 @@ CONFIDENTIALITY & SECURITY GUARDRAILS:
     if (isHindi) {
       return `जी बिल्कुल। मैं चेक कर रहा हूँ... अगर स्टॉक या किसी सामान की डिटेल चाहिए तो बताइए।`;
     }
+    // Spanish
+    if (/\b(hola|que|tal|como|estas|buenos|dias|tardes|gracias|por|favor|precio|inventario|ayuda)\b/i.test(lower)) {
+      return `¡Hola! Con mucho gusto le ayudo. Dígame qué producto, inventario o consulta tiene y con gusto lo reviso.`;
+    }
+    // Arabic
+    if (/[\u0600-\u06FF]/.test(userMessage) || /\b(marhaban|ahlan|shukran|kaifa|haluk)\b/i.test(lower)) {
+      return `أهلاً وسهلاً بك! كيف يمكنني مساعدتك اليوم؟ يرجى إخباري بالمنتج أو الاستفسار الذي تحتاجه وسأكون سعيداً بخدمتك.`;
+    }
+    // French
+    if (/\b(bonjour|salut|merci|comment|allez|vous|prix|stock|aide)\b/i.test(lower)) {
+      return `Bonjour ! C'est un plaisir de vous aider. Dites-moi quel produit ou information de stock vous recherchez.`;
+    }
+    // German
+    if (/\b(hallo|guten|tag|danke|bitte|preis|lager|hilfe)\b/i.test(lower)) {
+      return `Hallo! Sehr gerne helfe ich Ihnen weiter. Bitte sagen Sie mir, welches Produkt oder welche Information Sie benötigen.`;
+    }
+
     return `Got it! Let me check on that for you. If you need any stock counts or pricing details, just let me know.`;
   }
 
