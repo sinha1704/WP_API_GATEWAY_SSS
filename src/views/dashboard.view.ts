@@ -1541,11 +1541,11 @@ export function renderDashboardHtml(): string {
               </div>
               <div style="flex: 1;">
                 <div class="rbac-mode-title">
-                  <span>Public Mode (Unrestricted)</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">Global Access</span>
+                  <span>Public Mode (Everyone Allowed)</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">All Numbers</span>
                 </div>
                 <div class="rbac-mode-desc">
-                  Open for all inbound WhatsApp contacts worldwide. Ideal for public sales, customer support, and general product catalogs.
+                  Anyone can send a message. The bot automatically marks messages as <b>Seen (Blue Ticks)</b> and sends AI / ERP automated replies to all contacts.
                 </div>
               </div>
             </div>
@@ -1556,11 +1556,11 @@ export function renderDashboardHtml(): string {
               </div>
               <div style="flex: 1;">
                 <div class="rbac-mode-title">
-                  <span>Restricted VIP Whitelist</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Zero-Trust Private</span>
+                  <span>Restricted VIP Mode (Only Whitelist Allowed)</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Whitelist Only</span>
                 </div>
                 <div class="rbac-mode-desc">
-                  Restricts node exclusively to authorized phone numbers listed below. Unauthorized senders are silently ignored with zero read receipts or database queries.
+                  <b>Only the phone numbers added to the whitelist below</b> will get <b>Seen (Blue Ticks)</b> and automated replies. Messages from any unlisted number are <b>completely ignored with zero blue ticks and zero replies</b>.
                 </div>
               </div>
             </div>
@@ -1573,10 +1573,10 @@ export function renderDashboardHtml(): string {
             <div style="margin-bottom: 22px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label class="field-caption" style="margin-bottom: 0; font-weight: 700; color: var(--text-main);">
-                  Bulk Import Numbers (CSV, TXT, Excel TSV):
+                  Bulk Upload Phone Numbers (CSV, TXT, Excel):
                 </label>
                 <span style="font-size: 11px; color: var(--text-muted);">
-                  Auto-formats Indian (+91), US (+1), and global country codes
+                  Supports 10-digit mobile numbers or with country code (e.g., +91, 91)
                 </span>
               </div>
               
@@ -1591,7 +1591,7 @@ export function renderDashboardHtml(): string {
                       Click to choose or drag & drop CSV, TXT, or Excel files here
                     </div>
                     <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
-                      Reads contact lists in rows or columns, cleans whitespace, removes symbols, and automatically deduplicates numbers.
+                      Reads contact lists from files, automatically cleans spaces/symbols, and removes duplicates.
                     </div>
                   </div>
                 </div>
@@ -1601,10 +1601,10 @@ export function renderDashboardHtml(): string {
 
             <!-- Manual Single Contact Input -->
             <div style="margin-bottom: 22px;">
-              <label class="field-caption" style="font-weight: 700; color: var(--text-main);">Add Authorized Contact Manually:</label>
+              <label class="field-caption" style="font-weight: 700; color: var(--text-main);">Add Phone Number Manually:</label>
               <div style="display: flex; gap: 10px;">
                 <div style="flex: 1;">
-                  <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Enter phone number with country code (e.g. 919382468250) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
+                  <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Enter phone number (e.g. 7063644658 or 917063644658) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
                 </div>
                 <button class="btn btn-ghost" style="padding: 0 18px;" onclick="addSingleContact()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
@@ -1617,7 +1617,7 @@ export function renderDashboardHtml(): string {
             <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px;">
               <div class="whitelist-stats-bar">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <span style="font-weight: 700; color: var(--text-main); font-size: 13.5px;">Authorized VIP Whitelist Directory</span>
+                  <span style="font-weight: 700; color: var(--text-main); font-size: 13.5px;">Allowed Numbers Whitelist</span>
                   <span id="whitelist-count-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 12px; font-family: var(--font-mono);">0 numbers</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -1629,7 +1629,7 @@ export function renderDashboardHtml(): string {
               <!-- Visual Chips List -->
               <div class="contact-chip-container" id="whitelist-chips-box">
                 <div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center; width: 100%;">
-                  No authorized numbers configured yet. Upload a CSV file or add phone numbers above to restrict access.
+                  No authorized numbers added yet. Add numbers above or upload a CSV file to allow them.
                 </div>
               </div>
             </div>

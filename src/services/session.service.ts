@@ -358,24 +358,48 @@ export class SessionManager {
         // If unauthorized: NEVER send read receipt (seen/blue tick), do not log content, do not answer
         if (sessionInstance.accessMode === 'restricted') {
           const allowedList = sessionInstance.allowedContacts || [];
-          const cleanSenderPhone = senderPhone.replace(/\D/g, '');
+          
+          // Determine the actual sender's JID (handles direct 1-on-1 chats and group participants)
+          const actualSenderJid = msg.key.participant || remoteJid;
+          const senderPhoneRaw = actualSenderJid.split('@')[0];
+          const cleanSenderPhone = senderPhoneRaw.replace(/\D/g, '');
+          const last10Sender = cleanSenderPhone.length >= 10 ? cleanSenderPhone.slice(-10) : cleanSenderPhone;
+
           const isAllowed = allowedList.some((allowed) => {
             const cleanAllowed = allowed.replace(/\D/g, '');
+            const last10Allowed = cleanAllowed.length >= 10 ? cleanAllowed.slice(-10) : cleanAllowed;
+
             return (
               allowed === remoteJid ||
+              allowed === actualSenderJid ||
               allowed === senderPhone ||
+              allowed === senderPhoneRaw ||
               cleanAllowed === cleanSenderPhone ||
-              (cleanAllowed.length >= 10 && cleanSenderPhone.endsWith(cleanAllowed))
+              (last10Allowed.length >= 7 && last10Sender === last10Allowed) ||
+              (cleanAllowed.length >= 7 && cleanSenderPhone.endsWith(cleanAllowed)) ||
+              (cleanSenderPhone.length >= 7 && cleanAllowed.endsWith(cleanSenderPhone))
             );
           });
 
           if (!isAllowed) {
             logger.warn(
-              { sessionId, remoteJid, senderPhone, allowedCount: allowedList.length },
-              '🛡️ RBAC Guard: Message ignored & NOT marked as seen because sender is not authorized'
+              {
+                sessionId,
+                remoteJid,
+                actualSenderJid,
+                senderPhone: cleanSenderPhone,
+                allowedCount: allowedList.length,
+                allowedContacts: allowedList,
+              },
+              '🛡️ RBAC Guard: Inbound message from unauthorized sender was dropped (NO blue ticks, NO response)'
             );
             continue; // Completely drop: NO read receipt, NO webhook, NO AI reply
           }
+
+          logger.info(
+            { sessionId, remoteJid, actualSenderJid, senderPhone: cleanSenderPhone },
+            '🛡️ RBAC Guard: Authorized sender verified. Proceeding with read receipt and AI response.'
+          );
         }
 
         // 1. Auto Mark As Read (Seen / Blue Ticks) - ONLY for authorized contacts
