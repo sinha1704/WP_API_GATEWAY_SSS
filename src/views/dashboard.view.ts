@@ -13,43 +13,44 @@ export function renderDashboardHtml(): string {
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      /* High-Precision Crafted Color Palette */
-      --bg-canvas: #090c10;
-      --bg-surface: #0d1117;
-      --bg-subtle: #161b22;
-      --bg-elevated: #21262d;
-      --bg-card: rgba(13, 17, 23, 0.85);
+      /* Enterprise Slate & Titanium Palette (Zero Neon AI Aesthetics) */
+      --bg-canvas: #0b0f17;
+      --bg-surface: #111726;
+      --bg-subtle: #182234;
+      --bg-elevated: #1f2c42;
+      --bg-card: rgba(17, 23, 38, 0.92);
 
-      --border-subtle: rgba(240, 246, 252, 0.08);
-      --border-default: rgba(240, 246, 252, 0.14);
-      --border-active: rgba(35, 134, 54, 0.5);
+      --border-subtle: rgba(226, 232, 240, 0.08);
+      --border-default: rgba(226, 232, 240, 0.14);
+      --border-active: #38bdf8;
 
-      --text-main: #f0f6fc;
-      --text-sub: #8b949e;
-      --text-muted: #6e7681;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
 
-      --emerald-500: #238636;
-      --emerald-400: #2ea043;
-      --emerald-glow: rgba(46, 160, 67, 0.15);
-      
-      --cyan-500: #1f6feb;
-      --cyan-glow: rgba(31, 111, 235, 0.15);
+      --accent-primary: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-glow: rgba(37, 99, 235, 0.18);
 
-      --amber-500: #d29922;
-      --amber-glow: rgba(210, 153, 34, 0.15);
+      --status-live: #10b981;
+      --status-live-bg: rgba(16, 185, 129, 0.12);
+      --status-live-border: rgba(16, 185, 129, 0.3);
 
-      --red-500: #f85149;
-      --red-glow: rgba(248, 81, 73, 0.15);
+      --status-warn: #f59e0b;
+      --status-warn-bg: rgba(245, 158, 11, 0.12);
 
-      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
+      --status-danger: #ef4444;
+      --status-danger-bg: rgba(239, 68, 68, 0.12);
+
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', "SF Mono", Consolas, monospace;
 
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
-      --shadow-modal: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-default);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-subtle);
+      --shadow-modal: 0 24px 48px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px var(--border-default);
     }
 
     * {
@@ -97,17 +98,18 @@ export function renderDashboardHtml(): string {
     }
 
     .brand-icon {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 8px;
-      background: linear-gradient(135deg, #238636 0%, #19692c 100%);
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
+      color: #38bdf8;
       font-weight: 800;
       font-size: 14px;
-      box-shadow: 0 2px 8px rgba(35, 134, 54, 0.35);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
 
     .brand-title {
@@ -121,15 +123,15 @@ export function renderDashboardHtml(): string {
     }
 
     .brand-badge {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 2px 7px;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
       border-radius: 12px;
-      background: var(--bg-subtle);
-      color: var(--text-sub);
-      border: 1px solid var(--border-subtle);
+      background: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     .header-nav {
@@ -155,20 +157,20 @@ export function renderDashboardHtml(): string {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--emerald-400);
-      box-shadow: 0 0 8px rgba(46, 160, 67, 0.6);
+      background: var(--status-live);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
       position: relative;
     }
 
     .live-dot::after {
       content: '';
       position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
+      top: -2.5px;
+      left: -2.5px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      border: 1.5px solid var(--emerald-400);
+      border: 1.5px solid var(--status-live);
       animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
@@ -528,10 +530,10 @@ export function renderDashboardHtml(): string {
     }
 
     .tab-item.is-selected {
-      color: #3fb950;
+      color: #38bdf8;
       font-weight: 600;
-      border-bottom-color: var(--emerald-400);
-      background: rgba(35, 134, 54, 0.05);
+      border-bottom-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.06);
     }
 
     .tab-content-area {
@@ -601,14 +603,15 @@ export function renderDashboardHtml(): string {
     }
 
     .btn-solid-emerald {
-      background: var(--emerald-500);
+      background: var(--accent-primary);
+      border-color: rgba(255, 255, 255, 0.15);
       color: #ffffff;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
     }
 
     .btn-solid-emerald:hover {
-      background: var(--emerald-400);
-      box-shadow: 0 2px 6px rgba(35, 134, 54, 0.4);
+      background: var(--accent-hover);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
     }
 
     .btn-ghost {
@@ -619,18 +622,18 @@ export function renderDashboardHtml(): string {
 
     .btn-ghost:hover {
       background: var(--bg-elevated);
-      border-color: rgba(240, 246, 252, 0.3);
+      border-color: var(--border-active);
     }
 
     .btn-danger-outline {
       background: transparent;
-      border-color: rgba(248, 81, 73, 0.3);
-      color: var(--red-500);
+      border-color: var(--status-danger-bg);
+      color: var(--status-danger);
     }
 
     .btn-danger-outline:hover {
-      background: var(--red-glow);
-      border-color: var(--red-500);
+      background: var(--status-danger-bg);
+      border-color: var(--status-danger);
     }
 
     /* Output Console Area */
@@ -979,31 +982,31 @@ export function renderDashboardHtml(): string {
       <div class="metric-card">
         <div class="metric-label-wrap">
           <span class="metric-title">Active WhatsApp Nodes</span>
-          <span style="font-size: 14px;">📱</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8;"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
         </div>
         <div class="metric-val" id="metric-node-count">-- Nodes</div>
         <div class="metric-hint" id="metric-connected-count">-- Active Connected</div>
       </div>
       <div class="metric-card">
         <div class="metric-label-wrap">
-          <span class="metric-title">AI Inference Pipeline</span>
-          <span style="font-size: 14px;">⚡</span>
+          <span class="metric-title">Inference Engine</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #f59e0b;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
-        <div class="metric-val" style="font-size: 15px;">${config.GROQ_MODEL}</div>
+        <div class="metric-val" style="font-size: 14.5px;">${config.GROQ_MODEL}</div>
         <div class="metric-hint">Whisper Large v3 (Opus 48kHz)</div>
       </div>
       <div class="metric-card">
         <div class="metric-label-wrap">
           <span class="metric-title">Security & Privacy Guard</span>
-          <span style="font-size: 14px;">🛡️</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div class="metric-val" style="color: var(--emerald-400);">Read-Only Verified</div>
+        <div class="metric-val" style="color: #34d399;">Read-Only Enforced</div>
         <div class="metric-hint">Sensitive cost columns masked</div>
       </div>
       <div class="metric-card">
         <div class="metric-label-wrap">
           <span class="metric-title">System Memory & Uptime</span>
-          <span style="font-size: 14px;">⏱️</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #94a3b8;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="metric-val" id="metric-heap">-- MB</div>
         <div class="metric-hint" id="metric-uptime">Uptime: --</div>
@@ -1052,7 +1055,7 @@ export function renderDashboardHtml(): string {
             <table class="spec-table">
               <tr>
                 <td class="spec-k">Active Node</td>
-                <td class="spec-v" id="tbl-session-id" style="font-weight: 700; color: var(--emerald-400);">session-1</td>
+                <td class="spec-v" id="tbl-session-id" style="font-weight: 700; color: #38bdf8;">session-1</td>
               </tr>
               <tr>
                 <td class="spec-k">Linked Phone</td>
@@ -1060,11 +1063,11 @@ export function renderDashboardHtml(): string {
               </tr>
               <tr>
                 <td class="spec-k">Anti-Ban Queue</td>
-                <td class="spec-v" style="color: var(--emerald-400);">Throttled (3s Safe)</td>
+                <td class="spec-v" style="color: #34d399;">Throttled (3s Safe)</td>
               </tr>
               <tr>
-                <td class="k">Audio Codec</td>
-                <td class="v">Opus Mono 48kHz</td>
+                <td class="spec-k">Audio Codec</td>
+                <td class="spec-v">Opus Mono 48kHz</td>
               </tr>
             </table>
           </div>
@@ -1075,12 +1078,30 @@ export function renderDashboardHtml(): string {
       <!-- Right Panel: Telemetry & Interactive Console Workspaces -->
       <section class="glass-card">
         <div class="tab-nav">
-          <div class="tab-item is-selected" onclick="activateTab('pane-telemetry', this)">📈 Telemetry</div>
-          <div class="tab-item" style="color: var(--emerald-400); font-weight: 600;" onclick="activateTab('pane-simulator', this)">💬 Live Simulator</div>
-          <div class="tab-item" style="color: var(--emerald-400); font-weight: 600;" onclick="activateTab('pane-pair', this)">➕ Link Device</div>
-          <div class="tab-item" onclick="activateTab('pane-erp', this)">🗄️ ERP Query</div>
-          <div class="tab-item" onclick="activateTab('pane-voice', this)">🎙️ Voice Synthesizer</div>
-          <div class="tab-item" onclick="activateTab('pane-guard', this)">🛡️ Guardrails</div>
+          <div class="tab-item is-selected" onclick="activateTab('pane-telemetry', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <span>Telemetry</span>
+          </div>
+          <div class="tab-item" onclick="activateTab('pane-simulator', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Live Simulator</span>
+          </div>
+          <div class="tab-item" onclick="activateTab('pane-pair', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            <span>Link Device</span>
+          </div>
+          <div class="tab-item" onclick="activateTab('pane-erp', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+            <span>Database ERP</span>
+          </div>
+          <div class="tab-item" onclick="activateTab('pane-voice', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            <span>Neural Voice</span>
+          </div>
+          <div class="tab-item" onclick="activateTab('pane-guard', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Guardrails</span>
+          </div>
         </div>
 
         <!-- TAB 1: Telemetry Stream Chart -->
@@ -1281,12 +1302,13 @@ export function renderDashboardHtml(): string {
             <div class="wa-chat-top">
               <div class="wa-avatar">W</div>
               <div style="flex: 1;">
-                <div class="wa-chat-title">WhatsApp AI Agent (Production Engine)</div>
+                <div class="wa-chat-title">WhatsApp AI Assistant</div>
                 <div class="wa-chat-status" id="wa-sim-status">online • listening for voice & text</div>
               </div>
-              <div style="display: flex; gap: 14px; font-size: 16px; color: #aebac1; align-items: center;">
-                <span title="Clear conversation" style="cursor: pointer; font-size: 14px;" onclick="clearSimulatorChat()">🗑️</span>
-                <span style="font-size: 18px; cursor: pointer;">⋮</span>
+              <div style="display: flex; gap: 14px; color: #94a3b8; align-items: center;">
+                <button style="background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px; display: flex; align-items: center;" title="Clear conversation" onclick="clearSimulatorChat()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                </button>
               </div>
             </div>
 
@@ -1298,14 +1320,12 @@ export function renderDashboardHtml(): string {
             </div>
 
             <div class="wa-input-dock">
-              <span style="font-size: 20px; color: #8696a0; cursor: pointer;" title="Emoji">😊</span>
-              <span style="font-size: 20px; color: #8696a0; cursor: pointer;" title="Attach Document / Media">📎</span>
-              <input type="text" id="wa-sim-input" class="field-input" style="background: #2a3942; border: none; border-radius: 20px; padding: 10px 16px; font-size: 13px;" placeholder="Ask anything in Bengali, Hindi, or English..." onkeydown="if(event.key==='Enter') sendSimMessage()">
-              <button class="btn btn-ghost" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; min-width: 40px; font-size: 16px;" title="Send Voice Note query" onclick="simulateVoiceQuery()">
-                🎙️
+              <input type="text" id="wa-sim-input" class="field-input" style="background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 10px 16px; font-size: 13px;" placeholder="Ask anything in Bengali, Hindi, or English..." onkeydown="if(event.key==='Enter') sendSimMessage()">
+              <button class="btn btn-ghost" style="border-radius: 50%; width: 38px; height: 38px; padding: 0; min-width: 38px;" title="Send Voice Note query" onclick="simulateVoiceQuery()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
               </button>
-              <button class="btn btn-solid-emerald" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; min-width: 40px;" title="Send Message" onclick="sendSimMessage()">
-                ➤
+              <button class="btn btn-solid-emerald" style="border-radius: 50%; width: 38px; height: 38px; padding: 0; min-width: 38px;" title="Send Message" onclick="sendSimMessage()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
               </button>
             </div>
           </div>
@@ -1798,13 +1818,13 @@ export function renderDashboardHtml(): string {
 
         if (data.status === 'CONNECTED') {
           qrFrame.classList.remove('has-qr');
-          dot.className = 'dot live';
+          dot.className = 'live-dot';
           statusLbl.innerText = 'Connected & Active';
-          statusLbl.style.color = 'var(--accent)';
+          statusLbl.style.color = '#38bdf8';
           phoneLbl.innerText = data.user?.id ? data.user.id.split(':')[0] : 'Paired';
           qrImg.style.display = 'none';
           qrMsg.style.display = 'block';
-          qrMsg.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;"><div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(35, 134, 54, 0.2); border: 1px solid #238636; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #3fb950;">✓</div><div style="font-weight: 600; font-size: 13px; color: #3fb950;">Device Paired</div><div style="font-size: 11px; color: var(--text-muted);">Receiving WhatsApp traffic</div></div>';
+          qrMsg.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;"><div style="width: 42px; height: 42px; border-radius: 50%; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; color: #38bdf8;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div><div style="font-weight: 600; font-size: 13px; color: #f8fafc;">Device Paired</div><div style="font-size: 11px; color: var(--text-muted);">Gateway connected & active</div></div>';
           if (reconnectBtn) reconnectBtn.style.display = 'none';
         } else {
           dot.className = 'dot';
