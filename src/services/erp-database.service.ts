@@ -245,12 +245,13 @@ export class ErpDatabaseService {
         };
       }
 
-      // Return items
+      // Return items with confidential cost_price scrubbed
+      const publicProducts = MOCK_PRODUCTS.map(({ cost_price, ...rest }) => rest);
       return {
         success: true,
         query: sql,
-        rows: MOCK_PRODUCTS,
-        rowCount: MOCK_PRODUCTS.length,
+        rows: publicProducts,
+        rowCount: publicProducts.length,
       };
     }
 

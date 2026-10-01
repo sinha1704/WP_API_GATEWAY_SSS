@@ -285,6 +285,8 @@ export class VoiceTranscriptionService {
   public async synthesizeSpeech(text: string): Promise<{ buffer: Buffer; mimetype: string }> {
     const cleanText = text
       .replace(/[*_~`#]/g, '') // Strip markdown formatting
+      .replace(/^\s*[-•–—]\s*/gm, '') // Strip bullet dashes so speech is smooth
+      .replace(/[-–—]\s+/g, ' ') // Strip dashes between items
       .replace(/\[Verified via.*?\]/gi, '')
       .replace(/https?:\/\/\S+/g, '')
       .substring(0, 1000)
@@ -294,7 +296,7 @@ export class VoiceTranscriptionService {
 
     // 1. Natural Neural Human Male Voice Engine (Free, Ultra-realistic, 0% robotic)
     // Voices: Bengali Male (bn-IN-BashkarNeural), Hindi Male (hi-IN-MadhurNeural), English Male (en-US-ChristopherNeural)
-    if (config.TTS_PROVIDER === 'edge' || config.TTS_PROVIDER === 'msedge') {
+    if (config.TTS_PROVIDER === 'edge' || config.TTS_PROVIDER === 'msedge' || !config.TTS_PROVIDER) {
       try {
         const detectedLang = this.detectTextLanguage(cleanText);
         let selectedVoice = 'en-US-ChristopherNeural'; // Warm, professional natural male human voice

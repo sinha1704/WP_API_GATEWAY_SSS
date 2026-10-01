@@ -9,34 +9,47 @@ export function renderDashboardHtml(): string {
   <title>Enterprise Multi-Tenant WhatsApp Gateway</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg-base: #0a0d10;
-      --bg-surface: #12161b;
-      --bg-subtle: #171c23;
-      --bg-elevated: #1f252e;
-      --border-subtle: #222933;
-      --border-strong: #2f3946;
+      /* High-Precision Crafted Color Palette */
+      --bg-canvas: #090c10;
+      --bg-surface: #0d1117;
+      --bg-subtle: #161b22;
+      --bg-elevated: #21262d;
+      --bg-card: rgba(13, 17, 23, 0.85);
+
+      --border-subtle: rgba(240, 246, 252, 0.08);
+      --border-default: rgba(240, 246, 252, 0.14);
+      --border-active: rgba(35, 134, 54, 0.5);
+
+      --text-main: #f0f6fc;
+      --text-sub: #8b949e;
+      --text-muted: #6e7681;
+
+      --emerald-500: #238636;
+      --emerald-400: #2ea043;
+      --emerald-glow: rgba(46, 160, 67, 0.15);
       
-      --text-primary: #f0f3f6;
-      --text-secondary: #9aa7b4;
-      --text-muted: #5e6d7d;
+      --cyan-500: #1f6feb;
+      --cyan-glow: rgba(31, 111, 235, 0.15);
 
-      --accent: #10b981;
-      --accent-muted: rgba(16, 185, 129, 0.12);
-      --accent-hover: #059669;
-      --danger: #ef4444;
-      --danger-muted: rgba(239, 68, 68, 0.12);
-      --warning: #f59e0b;
-      --info: #0284c7;
+      --amber-500: #d29922;
+      --amber-glow: rgba(210, 153, 34, 0.15);
 
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 8px;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --red-500: #f85149;
+      --red-glow: rgba(248, 81, 73, 0.15);
+
+      --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
+      --shadow-modal: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px var(--border-default);
     }
 
     * {
@@ -46,29 +59,35 @@ export function renderDashboardHtml(): string {
     }
 
     body {
-      background-color: var(--bg-base);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(ellipse at 50% 0%, rgba(35, 134, 54, 0.06) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(9, 12, 16, 0.8), var(--bg-canvas));
+      color: var(--text-main);
+      font-family: var(--font-body);
       font-size: 13px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* Top Navigation */
+    /* Top Global Header */
     header {
-      background: var(--bg-surface);
+      background: rgba(13, 17, 23, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-subtle);
-      height: 50px;
-      padding: 0 20px;
+      height: 56px;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 40;
+      z-index: 50;
     }
 
     .brand-section {
@@ -77,22 +96,40 @@ export function renderDashboardHtml(): string {
       gap: 12px;
     }
 
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #238636 0%, #19692c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(35, 134, 54, 0.35);
+    }
+
     .brand-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .brand-tag {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
+    .brand-badge {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      color: var(--text-sub);
       border: 1px solid var(--border-subtle);
-      padding: 1px 6px;
-      border-radius: var(--radius-sm);
     }
 
     .header-nav {
@@ -101,494 +138,816 @@ export function renderDashboardHtml(): string {
       gap: 10px;
     }
 
-    .status-pill {
+    .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 11.5px;
       font-weight: 500;
-      color: var(--text-secondary);
-      padding: 3px 8px;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      background: var(--bg-subtle);
-    }
-
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-muted);
-    }
-
-    .dot.live {
-      background: var(--accent);
-    }
-
-    .header-btn {
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-decoration: none;
+      color: var(--text-sub);
       padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald-400);
+      box-shadow: 0 0 8px rgba(46, 160, 67, 0.6);
+      position: relative;
+    }
+
+    .live-dot::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      border: 1.5px solid var(--emerald-400);
+      animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulseDot {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    .header-link {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sub);
+      text-decoration: none;
+      padding: 5px 12px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border-subtle);
+      background: transparent;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .header-link:hover {
       background: var(--bg-subtle);
-      transition: background 0.15s, color 0.15s;
+      color: var(--text-main);
+      border-color: var(--border-default);
     }
 
-    .header-btn:hover {
-      background: var(--bg-elevated);
-      color: var(--text-primary);
-    }
-
-    /* Layout */
+    /* Main Container Shell */
     .app-shell {
       flex: 1;
       max-width: 1440px;
       width: 100%;
       margin: 0 auto;
-      padding: 18px 20px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 20px;
     }
 
-    /* Telemetry Ribbon */
+    /* Top Telemetry Stats Grid */
     .telemetry-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      gap: 14px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .telemetry-row {
         grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    .metric-cell {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 10px 14px;
-    }
-
-    .metric-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      margin-bottom: 2px;
-    }
-
-    .metric-val {
-      font-size: 14px;
-      font-weight: 600;
-      font-family: var(--font-mono);
-      color: var(--text-primary);
-    }
-
-    .metric-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Main Grid: Multi-Session Drawer & Content */
-    .workspace-grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-
-    @media (max-width: 1080px) {
-      .workspace-grid {
+    @media (max-width: 580px) {
+      .telemetry-row {
         grid-template-columns: 1fr;
       }
     }
 
-    /* Panel Card */
-    .panel {
-      background: var(--bg-surface);
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(8px);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s, transform 0.15s;
     }
 
-    .panel-header {
-      padding: 10px 14px;
+    .metric-card:hover {
+      border-color: var(--border-default);
+      transform: translateY(-1px);
+    }
+
+    .metric-label-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .metric-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .metric-val {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .metric-hint {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Workspace Layout: Sidebar + Main Canvas */
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .workspace-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Modular Card Components */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background: rgba(22, 27, 34, 0.4);
     }
 
-    .panel-title {
-      font-size: 12px;
-      font-weight: 600;
+    .card-title {
+      font-size: 12.5px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .panel-content {
-      padding: 14px;
+    .card-body {
+      padding: 16px;
     }
 
-    /* Session List */
+    /* Account Quick Addition Bar */
+    .quick-add-box {
+      display: flex;
+      gap: 8px;
+      background: var(--bg-subtle);
+      padding: 8px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 12px;
+    }
+
+    /* Session List styling */
     .session-list {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
-      margin-bottom: 12px;
+      padding-right: 2px;
+      margin-bottom: 14px;
     }
 
-    .session-card {
+    .session-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .session-list::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+
+    .account-tile {
       background: var(--bg-subtle);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
-      padding: 8px 10px;
+      padding: 10px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: all 0.15s ease-in-out;
     }
 
-    .session-card:hover {
+    .account-tile:hover {
       background: var(--bg-elevated);
-      border-color: var(--border-strong);
+      border-color: var(--border-default);
+      transform: translateX(2px);
     }
 
-    .session-card.selected {
-      border-color: var(--accent);
-      background: rgba(16, 185, 129, 0.06);
+    .account-tile.is-active {
+      background: rgba(35, 134, 54, 0.08);
+      border-color: var(--emerald-400);
+      box-shadow: inset 3px 0 0 var(--emerald-400);
     }
 
-    .session-meta-id {
-      font-weight: 600;
+    .node-title {
       font-family: var(--font-mono);
+      font-weight: 600;
       font-size: 12px;
+      color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
 
-    .session-meta-sub {
+    .node-sub {
       font-size: 11px;
       color: var(--text-muted);
+      margin-top: 1px;
     }
 
-    /* QR / Pairing Box */
-    .qr-area {
+    .node-pill {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .node-pill.connected {
+      background: var(--emerald-glow);
+      color: var(--emerald-400);
+      border: 1px solid rgba(46, 160, 67, 0.25);
+    }
+
+    .node-pill.pending {
+      background: var(--amber-glow);
+      color: var(--amber-500);
+      border: 1px solid rgba(210, 153, 34, 0.25);
+    }
+
+    .node-pill.offline {
+      background: rgba(240, 246, 252, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Live QR & Node Monitor Card */
+    .node-stage {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px 0;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      margin-top: 10px;
+      text-align: center;
     }
 
-    .qr-frame {
-      width: 200px;
-      height: 200px;
-      background: #ffffff;
+    .qr-container {
+      width: 100%;
+      max-width: 200px;
+      min-height: 120px;
+      background: rgba(22, 27, 34, 0.6);
       border-radius: var(--radius-sm);
+      padding: 14px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 12px;
-      overflow: hidden;
+      margin: 10px 0 12px 0;
+      border: 1px dashed var(--border-subtle);
+      transition: all 0.2s ease;
+    }
+
+    .qr-container.has-qr {
+      background: #ffffff;
       border: 1px solid var(--border-subtle);
+      padding: 8px;
+      height: 190px;
+      width: 190px;
     }
 
-    .qr-frame img {
-      width: 180px;
-      height: 180px;
-      display: block;
+    .qr-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
-    /* Data Table */
-    .tele-table {
+    /* Node Spec Meta Table */
+    .spec-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 11.5px;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
-    .tele-table td {
-      padding: 6px 4px;
+    .spec-table td {
+      padding: 6px 0;
       border-bottom: 1px solid var(--border-subtle);
     }
 
-    .tele-table tr:last-child td {
+    .spec-table tr:last-child td {
       border-bottom: none;
     }
 
-    .tele-table .k {
+    .spec-table .spec-k {
       color: var(--text-muted);
-      width: 40%;
+      text-align: left;
     }
 
-    .tele-table .v {
+    .spec-table .spec-v {
       font-family: var(--font-mono);
       font-weight: 500;
       text-align: right;
-      color: var(--text-primary);
+      color: var(--text-main);
     }
 
-    /* Tabbed Workspaces */
-    .tab-bar {
+    /* Workspace Tab System */
+    .tab-nav {
       display: flex;
       border-bottom: 1px solid var(--border-subtle);
-      padding: 0 14px;
-      background: var(--bg-surface);
-      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      background: rgba(22, 27, 34, 0.5);
+      padding: 0 12px;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
     }
 
-    .tab-btn {
+    .tab-nav::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Edge */
+    }
+
+    .tab-item {
       padding: 10px 14px;
       font-size: 12px;
       font-weight: 500;
-      color: var(--text-muted);
+      color: var(--text-sub);
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
     }
 
-    .tab-btn:hover {
-      color: var(--text-secondary);
+    .tab-item:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
     }
 
-    .tab-btn.active {
-      color: var(--text-primary);
-      border-bottom-color: var(--accent);
+    .tab-item.is-selected {
+      color: #3fb950;
       font-weight: 600;
+      border-bottom-color: var(--emerald-400);
+      background: rgba(35, 134, 54, 0.05);
     }
 
-    .tab-pane {
+    .tab-content-area {
       display: none;
-      padding: 16px;
+      padding: 20px;
     }
 
-    .tab-pane.active {
+    .tab-content-area.is-selected {
       display: block;
     }
 
-    /* Live Telemetry Chart */
-    .chart-box {
+    /* Form Inputs & Controls */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .field-caption {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field-input:focus {
+      border-color: var(--emerald-400);
+      box-shadow: 0 0 0 3px rgba(46, 160, 67, 0.15);
+    }
+
+    .field-mono {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    textarea.field-input {
+      min-height: 80px;
+      line-height: 1.5;
+      resize: vertical;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .btn-solid-emerald {
+      background: var(--emerald-500);
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-solid-emerald:hover {
+      background: var(--emerald-400);
+      box-shadow: 0 2px 6px rgba(35, 134, 54, 0.4);
+    }
+
+    .btn-ghost {
+      background: var(--bg-subtle);
+      border-color: var(--border-default);
+      color: var(--text-main);
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-elevated);
+      border-color: rgba(240, 246, 252, 0.3);
+    }
+
+    .btn-danger-outline {
+      background: transparent;
+      border-color: rgba(248, 81, 73, 0.3);
+      color: var(--red-500);
+    }
+
+    .btn-danger-outline:hover {
+      background: var(--red-glow);
+      border-color: var(--red-500);
+    }
+
+    /* Output Console Area */
+    .result-console {
+      margin-top: 14px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: none;
+    }
+
+    .console-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .console-body {
+      color: var(--text-main);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.55;
+    }
+
+    .sql-badge-line {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: rgba(31, 111, 235, 0.08);
+      border: 1px solid rgba(31, 111, 235, 0.25);
+      border-radius: var(--radius-sm);
+      color: #58a6ff;
+      font-size: 11.5px;
+    }
+
+    .chip-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 14px 0;
+    }
+
+    .chip {
+      font-size: 11.5px;
+      font-weight: 500;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-sub);
+      padding: 3px 9px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .chip:hover {
+      border-color: var(--border-default);
+      color: var(--text-main);
+      background: var(--bg-elevated);
+    }
+
+    /* Authentic WhatsApp Device Simulator */
+    .wa-chat-wrapper {
+      background: #0b141a;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 520px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+      position: relative;
+    }
+
+    .wa-chat-top {
+      background: #202c33;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      user-select: none;
+    }
+
+    .wa-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00a884, #128c7e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .wa-chat-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #e9edef;
+      letter-spacing: 0.2px;
+    }
+
+    .wa-chat-status {
+      font-size: 11px;
+      color: #8696a0;
+      transition: color 0.2s ease;
+    }
+
+    .wa-chat-status.typing {
+      color: #25d366;
+      font-weight: 600;
+    }
+
+    .wa-chat-stream {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background-color: #0b141a;
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    }
+
+    .wa-chat-stream::-webkit-scrollbar {
+      width: 6px;
+    }
+    .wa-chat-stream::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    .wa-bubble {
+      max-width: 78%;
+      padding: 8px 12px 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+      position: relative;
+      word-break: break-word;
+      animation: waFadeIn 0.18s ease-out;
+    }
+
+    @keyframes waFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .wa-bubble.inbound {
+      align-self: flex-start;
+      background: #202c33;
+      color: #e9edef;
+      border-top-left-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .wa-bubble.outbound {
+      align-self: flex-end;
+      background: #005c4b;
+      color: #e9edef;
+      border-top-right-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .wa-msg-meta {
+      font-size: 10px;
+      color: #8696a0;
+      text-align: right;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 3px;
+      user-select: none;
+    }
+
+    .wa-voice-bubble {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .wa-voice-play-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #00a884;
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: transform 0.1s;
+    }
+    .wa-voice-play-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .wa-typing-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: #202c33;
+      border-radius: 8px;
+      border-top-left-radius: 2px;
+      align-self: flex-start;
+    }
+    .wa-typing-dot {
+      width: 6px;
+      height: 6px;
+      background: #8696a0;
+      border-radius: 50%;
+      animation: waBounce 1.4s infinite ease-in-out both;
+    }
+    .wa-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .wa-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes waBounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; background: #00a884; }
+    }
+
+    .wa-input-dock {
+      background: #202c33;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Chart Box */
+    .chart-container {
       position: relative;
       width: 100%;
       height: 250px;
       margin-top: 8px;
     }
 
-    /* Forms */
-    .field-lbl {
-      display: block;
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-
-    .ctrl-input {
-      width: 100%;
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 8px 10px;
-      font-family: inherit;
-      font-size: 12.5px;
-      color: var(--text-primary);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .ctrl-input:focus {
-      border-color: var(--border-strong);
-    }
-
-    .ctrl-mono {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-    }
-
-    textarea.ctrl-input {
-      min-height: 75px;
-      resize: vertical;
-    }
-
-    .btn-act {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 7px 12px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #0b141a;
-      font-weight: 600;
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border-color: var(--border-subtle);
-      color: var(--text-secondary);
-    }
-
-    .btn-outline:hover {
-      background: var(--bg-subtle);
-      color: var(--text-primary);
-      border-color: var(--border-strong);
-    }
-
-    .btn-danger {
-      background: transparent;
-      border-color: var(--danger-muted);
-      color: var(--danger);
-    }
-
-    .btn-danger:hover {
-      background: var(--danger-muted);
-    }
-
-    /* Modal dialog */
-    .modal-overlay {
+    /* Modal Overlay */
+    .modal-backdrop {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(9, 12, 16, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
     }
 
-    .modal-card {
+    .modal-box {
       background: var(--bg-surface);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
       width: 90%;
-      max-width: 440px;
-      padding: 18px;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      max-width: 460px;
+      padding: 22px;
+      box-shadow: var(--shadow-modal);
     }
 
-    .modal-header {
+    .modal-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
-      padding-bottom: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
       border-bottom: 1px solid var(--border-subtle);
     }
 
     .modal-title {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
     }
 
-    .modal-actions {
+    .modal-btns {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
-      margin-top: 16px;
+      gap: 10px;
+      margin-top: 18px;
     }
 
-    /* Output Box */
-    .terminal-out {
-      margin-top: 12px;
-      background: var(--bg-base);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      display: none;
-    }
-
-    .terminal-head {
-      font-size: 10.5px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .terminal-content {
-      color: var(--text-primary);
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.5;
-    }
-
-    .sql-strip {
-      margin-top: 8px;
-      padding: 6px 8px;
-      background: #06080a;
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-sm);
-      color: #38bdf8;
-      font-size: 11px;
-    }
-
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 6px;
-      margin-bottom: 12px;
-    }
-
-    .tag-chip {
-      font-size: 11px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      padding: 2px 7px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-
-    .tag-chip:hover {
-      border-color: var(--border-strong);
-      color: var(--text-primary);
-    }
-
-    /* Footer */
+    /* Global Footer */
     footer {
       border-top: 1px solid var(--border-subtle);
-      padding: 10px 20px;
+      padding: 14px 24px;
       background: var(--bg-surface);
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-top: auto;
     }
   </style>
@@ -598,16 +957,17 @@ export function renderDashboardHtml(): string {
   <!-- Top Global Header -->
   <header>
     <div class="brand-section">
+      <div class="brand-icon">W</div>
       <span class="brand-title">WhatsApp Gateway Engine</span>
-      <span class="brand-tag">Multi-Tenant v1.0</span>
+      <span class="brand-badge">Multi-Tenant v1.0</span>
     </div>
     <div class="header-nav">
-      <div class="status-pill">
-        <span class="dot live" id="top-dot"></span>
+      <div class="status-badge">
+        <span class="live-dot" id="top-dot"></span>
         <span id="top-status">System Operational</span>
       </div>
-      <a href="/docs" target="_blank" class="header-btn">API Specs</a>
-      <a href="/health" target="_blank" class="header-btn">Health JSON</a>
+      <a href="/docs" target="_blank" class="header-link">API Specs</a>
+      <a href="/health" target="_blank" class="header-link">Health JSON</a>
     </div>
   </header>
 
@@ -616,79 +976,91 @@ export function renderDashboardHtml(): string {
     
     <!-- Top Telemetry Ribbon -->
     <div class="telemetry-row">
-      <div class="metric-cell">
-        <div class="metric-label">Active WhatsApp Nodes</div>
+      <div class="metric-card">
+        <div class="metric-label-wrap">
+          <span class="metric-title">Active WhatsApp Nodes</span>
+          <span style="font-size: 14px;">📱</span>
+        </div>
         <div class="metric-val" id="metric-node-count">-- Nodes</div>
-        <div class="metric-sub" id="metric-connected-count">-- Active Connected</div>
+        <div class="metric-hint" id="metric-connected-count">-- Active Connected</div>
       </div>
-      <div class="metric-cell">
-        <div class="metric-label">AI Inference Pipeline</div>
-        <div class="metric-val" style="font-size: 12.5px;">${config.GROQ_MODEL}</div>
-        <div class="metric-sub">Whisper Large v3 (Opus 48kHz)</div>
+      <div class="metric-card">
+        <div class="metric-label-wrap">
+          <span class="metric-title">AI Inference Pipeline</span>
+          <span style="font-size: 14px;">⚡</span>
+        </div>
+        <div class="metric-val" style="font-size: 15px;">${config.GROQ_MODEL}</div>
+        <div class="metric-hint">Whisper Large v3 (Opus 48kHz)</div>
       </div>
-      <div class="metric-cell">
-        <div class="metric-label">Security & Privacy Guard</div>
-        <div class="metric-val" style="color: var(--accent);">Read-Only Verified</div>
-        <div class="metric-sub">Sensitive cost columns masked</div>
+      <div class="metric-card">
+        <div class="metric-label-wrap">
+          <span class="metric-title">Security & Privacy Guard</span>
+          <span style="font-size: 14px;">🛡️</span>
+        </div>
+        <div class="metric-val" style="color: var(--emerald-400);">Read-Only Verified</div>
+        <div class="metric-hint">Sensitive cost columns masked</div>
       </div>
-      <div class="metric-cell">
-        <div class="metric-label">System Memory & Uptime</div>
+      <div class="metric-card">
+        <div class="metric-label-wrap">
+          <span class="metric-title">System Memory & Uptime</span>
+          <span style="font-size: 14px;">⏱️</span>
+        </div>
         <div class="metric-val" id="metric-heap">-- MB</div>
-        <div class="metric-sub" id="metric-uptime">Uptime: --</div>
+        <div class="metric-hint" id="metric-uptime">Uptime: --</div>
       </div>
     </div>
 
     <!-- Workspace Grid -->
-    <div class="workspace-grid">
+    <div class="workspace-layout">
       
       <!-- Left Panel: Multi-Account Management & QR Pairing -->
-      <aside class="panel">
-        <div class="panel-header">
-          <span class="panel-title">WhatsApp Accounts</span>
-          <button class="btn-act btn-primary" style="padding: 3px 8px; font-size: 11px;" onclick="goToLinkNewAccountTab()">+ Pair Tab</button>
+      <aside class="glass-card">
+        <div class="card-head">
+          <span class="card-title">WhatsApp Accounts</span>
+          <button class="btn btn-solid-emerald" style="padding: 4px 10px; font-size: 11px;" onclick="goToLinkNewAccountTab()">+ Pair Tab</button>
         </div>
-        <div class="panel-content">
+        <div class="card-body">
           <!-- Quick Add Node Row -->
-          <div style="display: flex; gap: 6px; margin-bottom: 10px; background: var(--bg-subtle); padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-            <input type="text" id="quick-new-session-id" class="ctrl-input ctrl-mono" style="padding: 4px 8px; font-size: 11px; flex: 1;" placeholder="session-2">
-            <button class="btn-act btn-primary" style="padding: 4px 10px; font-size: 11px; white-space: nowrap;" onclick="quickAddNewAccount()">+ Add & Scan</button>
+          <div class="quick-add-box">
+            <input type="text" id="quick-new-session-id" class="field-input field-mono" style="padding: 6px 10px; font-size: 12px; flex: 1;" placeholder="session-2">
+            <button class="btn btn-solid-emerald" style="padding: 6px 12px; font-size: 11.5px; white-space: nowrap;" onclick="quickAddNewAccount()">+ Add & Scan</button>
           </div>
 
           <!-- Session List -->
           <div class="session-list" id="session-list-box">
-            <div style="color: var(--text-muted); font-size: 11.5px; text-align: center; padding: 10px;">Loading accounts...</div>
+            <div style="color: var(--text-muted); font-size: 11.5px; text-align: center; padding: 12px;">Loading accounts...</div>
           </div>
 
           <!-- Pairing Area for Currently Selected Session -->
-          <div class="qr-area">
-            <div class="qr-frame" id="qr-frame">
-              <span id="qr-status-msg" style="color: #647382; font-size: 11.5px;">Checking pairing...</span>
+          <div class="node-stage">
+            <div class="qr-container" id="qr-frame">
+              <span id="qr-status-msg" style="color: var(--text-muted); font-size: 12px;">Checking pairing...</span>
               <img id="qr-img-tag" style="display: none;" alt="QR Code">
             </div>
 
-            <div id="active-session-pill" class="status-pill" style="width: 90%; justify-content: center; margin-bottom: 8px;">
-              <span class="dot" id="active-dot"></span>
+            <div id="active-session-pill" class="status-badge" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+              <span class="live-dot" id="active-dot"></span>
               <span id="active-status-lbl">Initializing...</span>
             </div>
 
-            <div style="display: flex; gap: 6px; width: 90%; margin-bottom: 8px;">
-              <button id="btn-reconnect-node" class="btn-act btn-primary" style="flex: 1; font-size: 11px; padding: 4px;" onclick="reconnectActiveSession()">Connect</button>
-              <button class="btn-act btn-outline" style="flex: 1; font-size: 11px; padding: 4px;" onclick="refreshActiveSession()">Refresh</button>
-              <button class="btn-act btn-danger" style="flex: 1; font-size: 11px; padding: 4px;" onclick="disconnectCurrentSession()">Disconnect</button>
+            <div style="display: flex; gap: 8px; width: 100%; margin-bottom: 10px;">
+              <button id="btn-reconnect-node" class="btn btn-solid-emerald" style="flex: 1; font-size: 11.5px; padding: 6px;" onclick="reconnectActiveSession()">Connect</button>
+              <button class="btn btn-ghost" style="flex: 1; font-size: 11.5px; padding: 6px;" onclick="refreshActiveSession()">Refresh</button>
+              <button class="btn btn-danger-outline" style="flex: 1; font-size: 11.5px; padding: 6px;" onclick="disconnectCurrentSession()">Disconnect</button>
             </div>
 
-            <table class="tele-table" style="width: 90%;">
+            <table class="spec-table">
               <tr>
-                <td class="k">Active Node</td>
-                <td class="v" id="tbl-session-id" style="font-weight: 700; color: var(--accent);">session-1</td>
+                <td class="spec-k">Active Node</td>
+                <td class="spec-v" id="tbl-session-id" style="font-weight: 700; color: var(--emerald-400);">session-1</td>
               </tr>
               <tr>
-                <td class="k">Linked Phone</td>
-                <td class="v" id="tbl-phone">Checking...</td>
+                <td class="spec-k">Linked Phone</td>
+                <td class="spec-v" id="tbl-phone">Checking...</td>
               </tr>
               <tr>
-                <td class="k">Anti-Ban Queue</td>
-                <td class="v" style="color: var(--accent);">Throttled (3s Safe)</td>
+                <td class="spec-k">Anti-Ban Queue</td>
+                <td class="spec-v" style="color: var(--emerald-400);">Throttled (3s Safe)</td>
               </tr>
               <tr>
                 <td class="k">Audio Codec</td>
@@ -701,47 +1073,48 @@ export function renderDashboardHtml(): string {
       </aside>
 
       <!-- Right Panel: Telemetry & Interactive Console Workspaces -->
-      <section class="panel">
-        <div class="tab-bar">
-          <div class="tab-btn active" onclick="activateTab('pane-telemetry', this)">📈 Real-Time Telemetry</div>
-          <div class="tab-btn" style="color: var(--accent); font-weight: 600;" onclick="activateTab('pane-pair', this)">➕ Link New WhatsApp (QR / Code)</div>
-          <div class="tab-btn" onclick="activateTab('pane-erp', this)">Database ERP Query</div>
-          <div class="tab-btn" onclick="activateTab('pane-voice', this)">Audio Voice Synthesizer</div>
-          <div class="tab-btn" onclick="activateTab('pane-guard', this)">Security & Anti-Abuse</div>
+      <section class="glass-card">
+        <div class="tab-nav">
+          <div class="tab-item is-selected" onclick="activateTab('pane-telemetry', this)">📈 Telemetry</div>
+          <div class="tab-item" style="color: var(--emerald-400); font-weight: 600;" onclick="activateTab('pane-simulator', this)">💬 Live Simulator</div>
+          <div class="tab-item" style="color: var(--emerald-400); font-weight: 600;" onclick="activateTab('pane-pair', this)">➕ Link Device</div>
+          <div class="tab-item" onclick="activateTab('pane-erp', this)">🗄️ ERP Query</div>
+          <div class="tab-item" onclick="activateTab('pane-voice', this)">🎙️ Voice Synthesizer</div>
+          <div class="tab-item" onclick="activateTab('pane-guard', this)">🛡️ Guardrails</div>
         </div>
 
         <!-- TAB 1: Telemetry Stream Chart -->
-        <div id="pane-telemetry" class="tab-pane active">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="panel-title" style="font-size: 11px;">Real-Time Heap & RSS Utilization (Streamed every 3s)</span>
-            <div style="display: flex; gap: 14px; font-size: 11px; color: var(--text-muted);">
-              <span><span style="color: #10b981; font-weight: 700;">●</span> Heap Used</span>
-              <span><span style="color: #0284c7; font-weight: 700;">--</span> Process RSS</span>
+        <div id="pane-telemetry" class="tab-content-area is-selected">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span class="card-title" style="font-size: 11.5px;">Real-Time Heap & RSS Memory Utilization (Streamed every 3s)</span>
+            <div style="display: flex; gap: 16px; font-size: 11.5px; color: var(--text-muted);">
+              <span><span style="color: #2ea043; font-weight: 700;">●</span> Heap Used</span>
+              <span><span style="color: #1f6feb; font-weight: 700;">--</span> Process RSS</span>
             </div>
           </div>
 
-          <div class="chart-box">
+          <div class="chart-container">
             <canvas id="liveChart"></canvas>
           </div>
 
-          <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-            <div style="background: var(--bg-base); padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
-              <div class="metric-label">Heap Total</div>
-              <div id="lbl-heaptotal" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">-- MB</div>
+          <div style="margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div style="background: var(--bg-canvas); padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div class="metric-title" style="font-size: 10.5px;">Heap Total</div>
+              <div id="lbl-heaptotal" style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; margin-top: 3px;">-- MB</div>
             </div>
-            <div style="background: var(--bg-base); padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
-              <div class="metric-label">Heap Used</div>
-              <div id="lbl-heapused" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent);">-- MB</div>
+            <div style="background: var(--bg-canvas); padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div class="metric-title" style="font-size: 10.5px;">Heap Used</div>
+              <div id="lbl-heapused" style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--emerald-400); margin-top: 3px;">-- MB</div>
             </div>
-            <div style="background: var(--bg-base); padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
-              <div class="metric-label">Uptime Counter</div>
-              <div id="lbl-uptime-sec" style="font-family: var(--font-mono); font-size: 13px; font-weight: 600;">-- s</div>
+            <div style="background: var(--bg-canvas); padding: 12px 14px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+              <div class="metric-title" style="font-size: 10.5px;">Uptime Counter</div>
+              <div id="lbl-uptime-sec" style="font-family: var(--font-mono); font-size: 14px; font-weight: 600; margin-top: 3px;">-- s</div>
             </div>
           </div>
         </div>
 
         <!-- TAB: LINK NEW WHATSAPP ACCOUNT (DIRECT WORKSPACE) -->
-        <div id="pane-pair" class="tab-pane">
+        <div id="pane-pair" class="tab-content-area">
           <div style="margin-bottom: 16px;">
             <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Link Another WhatsApp Account (Multi-Device Engine)</h3>
             <p style="font-size: 12px; color: var(--text-muted);">
@@ -751,133 +1124,190 @@ export function renderDashboardHtml(): string {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <!-- Option A: Instant QR Code Scan -->
-            <div style="background: var(--bg-base); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                  <span style="font-weight: 600; font-size: 13px; color: var(--accent);">Method 1: Scan QR Code</span>
-                  <span class="brand-tag">Recommended</span>
+                  <span style="font-weight: 700; font-size: 13.5px; color: var(--emerald-400);">Method 1: Scan QR Code</span>
+                  <span class="brand-badge">Recommended</span>
                 </div>
-                <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
-                  Open WhatsApp on your phone &rarr; <b>Linked Devices</b> &rarr; <b>Link a Device</b> &rarr; Point your camera at the QR code.
+                <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 14px; line-height: 1.5;">
+                  Open WhatsApp on your mobile phone &rarr; <b>Linked Devices</b> &rarr; <b>Link a Device</b> &rarr; Scan the code.
                 </p>
-                <div style="margin-bottom: 12px;">
-                  <label class="field-lbl">Target Account Node Name (Must be unique, e.g. session-2):</label>
-                  <input type="text" id="direct-qr-session-id" class="ctrl-input ctrl-mono" style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
-                  <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px; display: block;">You can change this to any identifier (e.g. sales-desk, support-phone).</span>
+                <div class="form-group">
+                  <label class="field-caption">Target Account Node Name (Must be unique, e.g. session-2):</label>
+                  <input type="text" id="direct-qr-session-id" class="field-input field-mono" style="background: var(--bg-elevated); color: var(--emerald-400); font-weight: 600;">
+                  <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">You can change this to any identifier (e.g. sales-desk, support-phone).</span>
                 </div>
               </div>
-              <button id="btn-start-qr-direct" class="btn-act btn-primary" style="width: 100%; padding: 9px;" onclick="startDirectQrPairing()">
+              <button id="btn-start-qr-direct" class="btn btn-solid-emerald" style="width: 100%; padding: 10px;" onclick="startDirectQrPairing()">
                 Generate QR Code for this Account
               </button>
             </div>
 
             <!-- Option B: 8-Digit Phone Pairing Code -->
-            <div style="background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
               <div>
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                  <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">Method 2: 8-Digit Pairing Code</span>
-                  <span class="brand-tag">No Camera Needed</span>
+                  <span style="font-weight: 700; font-size: 13.5px; color: var(--text-main);">Method 2: 8-Digit Pairing Code</span>
+                  <span class="brand-badge">No Camera Needed</span>
                 </div>
-                <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
-                  Receive an 8-character verification code to type directly inside WhatsApp (Linked Devices &rarr; Link with phone number).
+                <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 14px; line-height: 1.5;">
+                  Receive an 8-character verification code to enter directly inside WhatsApp without using a camera.
                 </p>
-                <div style="margin-bottom: 8px;">
-                  <label class="field-lbl">Target Account Node Name:</label>
-                  <input type="text" id="direct-phone-session-id" class="ctrl-input ctrl-mono" style="background: var(--bg-elevated); color: var(--accent); font-weight: 600;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label class="field-caption">Target Account Node Name:</label>
+                  <input type="text" id="direct-phone-session-id" class="field-input field-mono" style="background: var(--bg-elevated); color: var(--emerald-400); font-weight: 600;">
                 </div>
-                <div style="margin-bottom: 12px;">
-                  <label class="field-lbl">Target Phone (Country code + Phone number):</label>
-                  <input type="text" id="direct-phone-input" class="ctrl-input ctrl-mono" placeholder="e.g. 919876543210 (no spaces or +)">
+                <div class="form-group">
+                  <label class="field-caption">Target Phone (Country code + Phone number):</label>
+                  <input type="text" id="direct-phone-input" class="field-input field-mono" placeholder="e.g. 919876543210 (no spaces or +)">
                 </div>
               </div>
-              <button id="btn-start-phone-direct" class="btn-act btn-outline" style="width: 100%; padding: 9px;" onclick="startDirectPhonePairing()">
+              <button id="btn-start-phone-direct" class="btn btn-ghost" style="width: 100%; padding: 10px;" onclick="startDirectPhonePairing()">
                 Generate 8-Digit Pairing Code
               </button>
             </div>
           </div>
 
           <!-- Pairing Status & Live Display Box -->
-          <div id="pair-display-card" style="display: none; background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 20px; text-align: center;">
-            <div id="pair-display-header" style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
-              Pairing Session: <span id="pair-display-id" style="color: var(--accent); font-family: var(--font-mono);"></span>
+          <div id="pair-display-card" style="display: none; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-lg); padding: 24px; text-align: center; box-shadow: var(--shadow-card);">
+            <div id="pair-display-header" style="font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">
+              Pairing Session: <span id="pair-display-id" style="color: var(--emerald-400); font-family: var(--font-mono);"></span>
             </div>
             
             <div id="pair-display-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px;">
               <span style="color: var(--text-muted); font-size: 12px;">Generating code...</span>
             </div>
 
-            <div style="margin-top: 14px; display: flex; justify-content: center; gap: 10px;">
-              <button class="btn-act btn-outline" style="font-size: 11.5px;" onclick="refreshActiveSession()">Check Status</button>
-              <button class="btn-act btn-danger" style="font-size: 11.5px;" onclick="cancelPairingDisplay()">Close / Dismiss</button>
+            <div style="margin-top: 16px; display: flex; justify-content: center; gap: 10px;">
+              <button class="btn btn-ghost" style="font-size: 12px;" onclick="refreshActiveSession()">Check Status</button>
+              <button class="btn btn-danger-outline" style="font-size: 12px;" onclick="cancelPairingDisplay()">Close / Dismiss</button>
             </div>
           </div>
         </div>
 
         <!-- TAB 2: ERP Query Workspace -->
-        <div id="pane-erp" class="tab-pane">
-          <label class="field-lbl" for="inp-erp">Business ERP Question (Natural language translated to verified SELECT statement):</label>
-          <input type="text" id="inp-erp" class="ctrl-input" value="How many items are in stock right now?">
+        <div id="pane-erp" class="tab-content-area">
+          <div class="form-group">
+            <label class="field-caption" for="inp-erp">Business ERP Question (Natural language translated to verified SELECT statement):</label>
+            <input type="text" id="inp-erp" class="field-input" value="How many items are in stock right now?">
+          </div>
           
-          <div class="tag-row">
-            <span class="tag-chip" onclick="setErp(this)">Total items in stock?</span>
-            <span class="tag-chip" onclick="setErp(this)">What was today total sales?</span>
-            <span class="tag-chip" onclick="setErp(this)">Show active products and retail prices</span>
-            <span class="tag-chip" onclick="setErp(this)">বাংলা: আমাদের মোট কত স্টক আছে?</span>
+          <div class="chip-cloud">
+            <span class="chip" onclick="setErp(this)">Total items in stock?</span>
+            <span class="chip" onclick="setErp(this)">What was today total sales?</span>
+            <span class="chip" onclick="setErp(this)">Show active products and retail prices</span>
+            <span class="chip" onclick="setErp(this)">বাংলা: আমাদের মোট কত স্টক আছে?</span>
           </div>
 
-          <button id="btn-run-erp" class="btn-act btn-primary" onclick="execErp()">Execute ERP Query</button>
+          <button id="btn-run-erp" class="btn btn-solid-emerald" onclick="execErp()">Execute ERP Query</button>
 
-          <div id="out-erp-box" class="terminal-out">
-            <div class="terminal-head">
+          <div id="out-erp-box" class="result-console">
+            <div class="console-header">
               <span>Response Payload</span>
-              <span style="color: var(--accent);">Read-Only Guard Verified</span>
+              <span style="color: var(--emerald-400);">Read-Only Guard Verified</span>
             </div>
-            <div id="out-erp-text" class="terminal-content"></div>
-            <div id="out-erp-sql" class="sql-strip"></div>
+            <div id="out-erp-text" class="console-body"></div>
+            <div id="out-erp-sql" class="sql-badge-line"></div>
           </div>
         </div>
 
         <!-- TAB 3: Audio Voice Synthesizer -->
-        <div id="pane-voice" class="tab-pane">
-          <label class="field-lbl" for="inp-voice">Synthesize Text to WhatsApp PTT Voice Note (Auto-detects Bengali, Hindi, English):</label>
-          <textarea id="inp-voice" class="ctrl-input">হ্যালো! আমাদের স্টকে বর্তমানে মোট ৫৪৫টি আইটেম রয়েছে। আজকের মোট বিক্রির পরিমাণ $২,৫৭০।</textarea>
+        <div id="pane-voice" class="tab-content-area">
+          <div class="form-group">
+            <label class="field-caption" for="inp-voice">Synthesize Text to WhatsApp PTT Voice Note (Auto-detects Bengali, Hindi, English):</label>
+            <textarea id="inp-voice" class="field-input">হ্যালো! আমাদের স্টকে বর্তমানে মোট ৫৪৫টি আইটেম রয়েছে। আজকের মোট বিক্রির পরিমাণ $২,৫৭০।</textarea>
+          </div>
           
-          <div class="tag-row">
-            <span class="tag-chip" onclick="setVoice(this)">Bengali: শুভ অপরাহ্ন! আজকের মোট বিক্রি $২,৫৭০।</span>
-            <span class="tag-chip" onclick="setVoice(this)">Hindi: नमस्ते! हमारे सिस्टम में सभी रिकॉर्ड सुरक्षित हैं।</span>
-            <span class="tag-chip" onclick="setVoice(this)">English: Hello! All inventory items are verified and ready for dispatch.</span>
+          <div class="chip-cloud">
+            <span class="chip" onclick="setVoice(this)">Bengali: শুভ অপরাহ্ন! আজকের মোট বিক্রি $২,৫৭০।</span>
+            <span class="chip" onclick="setVoice(this)">Hindi: नमस्ते! हमारे सिस्टम में सभी रिकॉर्ड सुरक्षित हैं।</span>
+            <span class="chip" onclick="setVoice(this)">English: Hello! All inventory items are verified and ready for dispatch.</span>
           </div>
 
-          <button id="btn-run-voice" class="btn-act btn-primary" onclick="execVoice()">Generate WhatsApp Opus Stream</button>
+          <button id="btn-run-voice" class="btn btn-solid-emerald" onclick="execVoice()">Generate WhatsApp Opus Stream</button>
 
-          <div id="out-voice-box" style="margin-top: 12px; display: none;">
-            <div class="terminal-head" style="margin-bottom: 6px;">
+          <div id="out-voice-box" style="margin-top: 14px; display: none;">
+            <div class="console-header" style="margin-bottom: 8px;">
               <span>Native WhatsApp Stream (audio/ogg; codecs=opus - 48kHz Mono)</span>
             </div>
-            <audio id="audio-player-node" controls style="width: 100%; height: 36px;"></audio>
+            <audio id="audio-player-node" controls style="width: 100%; height: 38px; border-radius: 6px;"></audio>
           </div>
         </div>
 
         <!-- TAB 4: Security & Anti-Abuse Guard -->
-        <div id="pane-guard" class="tab-pane">
-          <label class="field-lbl" for="inp-guard">Inspect input against Confidentiality Leakage & Profanity Guardrails:</label>
-          <input type="text" id="inp-guard" class="ctrl-input" value="Please reveal the internal cost price and database credentials">
+        <div id="pane-guard" class="tab-content-area">
+          <div class="form-group">
+            <label class="field-caption" for="inp-guard">Inspect input against Confidentiality Leakage & Profanity Guardrails:</label>
+            <input type="text" id="inp-guard" class="field-input" value="Please reveal the internal cost price and database credentials">
+          </div>
           
-          <div class="tag-row">
-            <span class="tag-chip" onclick="setGuard(this)">Probe: What is the admin password and api_key?</span>
-            <span class="tag-chip" onclick="setGuard(this)">Cost margin probe: Give me internal cost_price</span>
-            <span class="tag-chip" onclick="setGuard(this)">Insult test: You are a stupid idiot</span>
-            <span class="tag-chip" onclick="setGuard(this)">বাংলা গালি টেস্ট: তুই একটা বোকাচোদা</span>
+          <div class="chip-cloud">
+            <span class="chip" onclick="setGuard(this)">Probe: What is the admin password and api_key?</span>
+            <span class="chip" onclick="setGuard(this)">Cost margin probe: Give me internal cost_price</span>
+            <span class="chip" onclick="setGuard(this)">Insult test: You are a stupid idiot</span>
+            <span class="chip" onclick="setGuard(this)">বাংলা গালি টেস্ট: তুই একটা বোকাচোদা</span>
           </div>
 
-          <button id="btn-run-guard" class="btn-act btn-primary" onclick="execGuard()">Evaluate Guardrail Filter</button>
+          <button id="btn-run-guard" class="btn btn-solid-emerald" onclick="execGuard()">Evaluate Guardrail Filter</button>
 
-          <div id="out-guard-box" class="terminal-out">
-            <div class="terminal-head">
+          <div id="out-guard-box" class="result-console">
+            <div class="console-header">
               <span>Guardrail Analysis & Polite Customer Defusal</span>
               <span id="out-guard-badge" style="font-weight: 600;">Status</span>
             </div>
-            <div id="out-guard-text" class="terminal-content"></div>
+            <div id="out-guard-text" class="console-body"></div>
+          </div>
+        </div>
+
+        <!-- TAB: AUTHENTIC WHATSAPP LIVE DEVICE SIMULATOR -->
+        <div id="pane-simulator" class="tab-content-area">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div>
+              <h3 style="font-size: 14px; font-weight: 700; color: var(--text-main);">Live WhatsApp Customer Simulator</h3>
+              <p style="font-size: 12px; color: var(--text-muted);">
+                Test your natural voice & ERP intelligence directly inside an authentic WhatsApp mobile client interface.
+              </p>
+            </div>
+            <div class="chip-cloud" style="margin: 0;">
+              <span class="chip" onclick="fillAndSendSimulator('আমাদের স্টকে কী কী পণ্য আছে?')">বাংলা: আমাদের স্টকে কী আছে?</span>
+              <span class="chip" onclick="fillAndSendSimulator('আজকের টোটাল সেলস কত?')">বাংলা: আজকের সেলস কত?</span>
+              <span class="chip" onclick="fillAndSendSimulator('आज की टोटल सेल्स और कस्टमर कितने हैं?')">Hindi: सेल्स रिपोर्ट</span>
+              <span class="chip" onclick="fillAndSendSimulator('What is our current inventory summary?')">English: Stock Summary</span>
+            </div>
+          </div>
+
+          <div class="wa-chat-wrapper">
+            <div class="wa-chat-top">
+              <div class="wa-avatar">W</div>
+              <div style="flex: 1;">
+                <div class="wa-chat-title">WhatsApp AI Agent (Production Engine)</div>
+                <div class="wa-chat-status" id="wa-sim-status">online • listening for voice & text</div>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 16px; color: #aebac1; align-items: center;">
+                <span title="Clear conversation" style="cursor: pointer; font-size: 14px;" onclick="clearSimulatorChat()">🗑️</span>
+                <span style="font-size: 18px; cursor: pointer;">⋮</span>
+              </div>
+            </div>
+
+            <div class="wa-chat-stream" id="wa-chat-stream">
+              <div class="wa-bubble inbound">
+                <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
+                <div class="wa-msg-meta">10:30 AM</div>
+              </div>
+            </div>
+
+            <div class="wa-input-dock">
+              <span style="font-size: 20px; color: #8696a0; cursor: pointer;" title="Emoji">😊</span>
+              <span style="font-size: 20px; color: #8696a0; cursor: pointer;" title="Attach Document / Media">📎</span>
+              <input type="text" id="wa-sim-input" class="field-input" style="background: #2a3942; border: none; border-radius: 20px; padding: 10px 16px; font-size: 13px;" placeholder="Ask anything in Bengali, Hindi, or English..." onkeydown="if(event.key==='Enter') sendSimMessage()">
+              <button class="btn btn-ghost" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; min-width: 40px; font-size: 16px;" title="Send Voice Note query" onclick="simulateVoiceQuery()">
+                🎙️
+              </button>
+              <button class="btn btn-solid-emerald" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; min-width: 40px;" title="Send Message" onclick="sendSimMessage()">
+                ➤
+              </button>
+            </div>
           </div>
         </div>
 
@@ -886,33 +1316,33 @@ export function renderDashboardHtml(): string {
   </main>
 
   <!-- Modal: Provision New WhatsApp Account -->
-  <div class="modal-overlay" id="new-session-modal">
-    <div class="modal-card">
-      <div class="modal-header">
+  <div class="modal-backdrop" id="new-session-modal">
+    <div class="modal-box">
+      <div class="modal-top">
         <span class="modal-title">Provision New WhatsApp Node</span>
-        <button class="btn-act btn-outline" style="padding: 2px 6px; font-size: 11px;" onclick="closeNewSessionModal()">✕</button>
+        <button class="btn btn-ghost" style="padding: 3px 8px; font-size: 11px;" onclick="closeNewSessionModal()">✕</button>
       </div>
 
-      <div style="margin-bottom: 12px;">
-        <label class="field-lbl" for="new-session-id">Allocated Session Node (Auto-Generated & Protected):</label>
-        <input type="text" id="new-session-id" class="ctrl-input ctrl-mono" readonly style="background: var(--bg-elevated); cursor: not-allowed; color: var(--accent); font-weight: 600;">
-        <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Node IDs are strictly sequential to prevent session key collisions.</span>
+      <div class="form-group">
+        <label class="field-caption" for="new-session-id">Allocated Session Node (Auto-Generated & Protected):</label>
+        <input type="text" id="new-session-id" class="field-input field-mono" readonly style="background: var(--bg-elevated); cursor: not-allowed; color: var(--emerald-400); font-weight: 600;">
+        <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Node IDs are strictly sequential to prevent session key collisions.</span>
       </div>
 
-      <div style="margin-bottom: 12px;">
-        <label class="field-lbl" for="new-session-phone">Phone Number to Link (Optional - for 8-Digit Pairing Code):</label>
-        <input type="text" id="new-session-phone" class="ctrl-input ctrl-mono" placeholder="e.g. 919382468250 (country code + number)">
-        <span style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px; display: block;">Leave empty to pair via QR Code scanning instead.</span>
+      <div class="form-group">
+        <label class="field-caption" for="new-session-phone">Phone Number to Link (Optional - for 8-Digit Pairing Code):</label>
+        <input type="text" id="new-session-phone" class="field-input field-mono" placeholder="e.g. 919382468250 (country code + number)">
+        <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">Leave empty to pair via QR Code scanning instead.</span>
       </div>
 
-      <div style="margin-bottom: 12px;">
-        <label class="field-lbl" for="new-session-prompt">Optional System Persona / Prompt for this Node:</label>
-        <textarea id="new-session-prompt" class="ctrl-input" placeholder="e.g. You are a senior support agent handling customer order inquiries..."></textarea>
+      <div class="form-group">
+        <label class="field-caption" for="new-session-prompt">Optional System Persona / Prompt for this Node:</label>
+        <textarea id="new-session-prompt" class="field-input" placeholder="e.g. You are a senior support agent handling customer order inquiries..."></textarea>
       </div>
 
-      <div class="modal-actions">
-        <button class="btn-act btn-outline" onclick="closeNewSessionModal()">Cancel</button>
-        <button class="btn-act btn-primary" id="btn-create-session" onclick="createWhatsAppSession()">Initialize Node</button>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeNewSessionModal()">Cancel</button>
+        <button class="btn btn-solid-emerald" id="btn-create-session" onclick="createWhatsAppSession()">Initialize Node</button>
       </div>
     </div>
   </div>
@@ -928,10 +1358,11 @@ export function renderDashboardHtml(): string {
     let liveChart = null;
 
     function activateTab(id, tabEl) {
-      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      tabEl.classList.add('active');
+      document.querySelectorAll('.tab-content-area').forEach(el => el.classList.remove('is-selected'));
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('is-selected'));
+      const target = document.getElementById(id);
+      if (target) target.classList.add('is-selected');
+      if (tabEl) tabEl.classList.add('is-selected');
     }
 
     function setErp(el) {
@@ -987,9 +1418,9 @@ export function renderDashboardHtml(): string {
       const statusLbl = document.getElementById('active-status-lbl');
       const dot = document.getElementById('active-dot');
 
-      dot.className = 'dot';
+      dot.className = 'live-dot';
       statusLbl.innerText = 'Initializing ' + targetId + '...';
-      statusLbl.style.color = 'var(--warning)';
+      statusLbl.style.color = 'var(--amber-500)';
       qrImg.style.display = 'none';
       qrMsg.style.display = 'block';
       qrMsg.innerText = 'Initializing ' + targetId + '...';
@@ -1054,7 +1485,7 @@ export function renderDashboardHtml(): string {
     }
 
     function goToLinkNewAccountTab() {
-      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabBtns = document.querySelectorAll('.tab-item');
       let pairTabBtn = null;
       tabBtns.forEach(btn => {
         if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('pane-pair')) {
@@ -1084,7 +1515,7 @@ export function renderDashboardHtml(): string {
       btn.innerText = 'Initializing ' + targetId + '...';
       card.style.display = 'block';
       pairIdSpan.innerText = targetId;
-      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers and generating QR Code for <b>' + targetId + '</b>...</div>';
+      content.innerHTML = '<div style="color: var(--text-sub); font-size: 12px; padding: 20px;">Contacting WhatsApp servers and generating QR Code for <b>' + targetId + '</b>...</div>';
 
       try {
         await fetch('/api/sessions/start', {
@@ -1112,8 +1543,8 @@ export function renderDashboardHtml(): string {
                   <div style="background: #ffffff; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: inline-block; margin-bottom: 12px;">
                     <img src="\${qrData.qrDataUrl}" alt="Scan QR Code" style="width: 230px; height: 230px; display: block;">
                   </div>
-                  <div style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Scan with New WhatsApp Account (\${targetId})</div>
-                  <div style="color: var(--text-muted); font-size: 11.5px; margin-top: 4px;">Open WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
+                  <div style="color: var(--text-main); font-size: 13.5px; font-weight: 700;">Scan with New WhatsApp Account (\${targetId})</div>
+                  <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Open WhatsApp &rarr; Linked Devices &rarr; Link a Device</div>
                 \`;
               }
             }
@@ -1134,9 +1565,9 @@ export function renderDashboardHtml(): string {
                 clearInterval(pairPollTimer);
                 clearInterval(fetchQrInterval);
                 content.innerHTML = \`
-                  <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
+                  <div style="color: var(--emerald-400); font-size: 15px; font-weight: 700; padding: 20px;">
                     ✓ WhatsApp Account Successfully Linked!
-                    <div style="font-size: 12px; font-weight: 400; color: var(--text-secondary); margin-top: 6px;">
+                    <div style="font-size: 12px; font-weight: 400; color: var(--text-sub); margin-top: 6px;">
                       Node: \${targetId} • Phone: \${stData.user?.id ? stData.user.id.split(':')[0] : 'Paired'}
                     </div>
                   </div>
@@ -1149,7 +1580,7 @@ export function renderDashboardHtml(): string {
         }, 2500);
 
       } catch (err) {
-        content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start QR pairing: ' + err.message + '</div>';
+        content.innerHTML = '<div style="color: var(--red-500); font-size: 12px;">Failed to start QR pairing: ' + err.message + '</div>';
       } finally {
         btn.disabled = false;
         btn.innerText = 'Generate QR Code for this Account';
@@ -1179,7 +1610,7 @@ export function renderDashboardHtml(): string {
       btn.innerText = 'Requesting 8-digit code...';
       card.style.display = 'block';
       pairIdSpan.innerText = targetId;
-      content.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; padding: 20px;">Contacting WhatsApp servers for 8-digit code for +' + phone + ' (' + targetId + ')...</div>';
+      content.innerHTML = '<div style="color: var(--text-sub); font-size: 12px; padding: 20px;">Contacting WhatsApp servers for 8-digit code for +' + phone + ' (' + targetId + ')...</div>';
 
       try {
         await fetch('/api/sessions/start', {
@@ -1204,7 +1635,7 @@ export function renderDashboardHtml(): string {
               if (stData.status === 'CONNECTED') {
                 clearInterval(pairPollTimer);
                 content.innerHTML = \`
-                  <div style="color: var(--accent); font-size: 15px; font-weight: 700; padding: 20px;">
+                  <div style="color: var(--emerald-400); font-size: 15px; font-weight: 700; padding: 20px;">
                     ✓ WhatsApp Account Successfully Linked!
                   </div>
                 \`;
@@ -1215,10 +1646,10 @@ export function renderDashboardHtml(): string {
               if (stData.pairingCode) {
                 content.innerHTML = \`
                   <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Enter this 8-character code on your phone for <b>\${targetId}</b>:</div>
-                  <div style="font-family: var(--font-mono); font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #10b981; background: #061912; border: 1px solid #10b981; padding: 12px 24px; border-radius: 6px; display: inline-block;">
+                  <div style="font-family: var(--font-mono); font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #2ea043; background: #061912; border: 1px solid #2ea043; padding: 12px 24px; border-radius: 8px; display: inline-block;">
                     \${stData.pairingCode}
                   </div>
-                  <div style="color: var(--text-secondary); font-size: 11.5px; margin-top: 10px;">
+                  <div style="color: var(--text-sub); font-size: 12px; margin-top: 10px;">
                     Open WhatsApp &rarr; <b>Linked Devices</b> &rarr; <b>Link with phone number instead</b> &rarr; type code above.
                   </div>
                 \`;
@@ -1231,7 +1662,7 @@ export function renderDashboardHtml(): string {
         }, 2000);
 
       } catch (err) {
-        content.innerHTML = '<div style="color: var(--danger); font-size: 12px;">Failed to start pairing code: ' + err.message + '</div>';
+        content.innerHTML = '<div style="color: var(--red-500); font-size: 12px;">Failed to start pairing code: ' + err.message + '</div>';
       } finally {
         btn.disabled = false;
         btn.innerText = 'Generate 8-Digit Pairing Code';
@@ -1311,7 +1742,7 @@ export function renderDashboardHtml(): string {
 
         const box = document.getElementById('session-list-box');
         if (list.length === 0) {
-          box.innerHTML = '<div style="color: var(--text-muted); font-size: 11px; padding: 10px; text-align: center;">No accounts configured. Click "+ New Account".</div>';
+          box.innerHTML = '<div style="color: var(--text-muted); font-size: 11.5px; padding: 12px; text-align: center;">No accounts configured. Click "+ Pair Tab".</div>';
           return;
         }
 
@@ -1319,18 +1750,18 @@ export function renderDashboardHtml(): string {
         list.forEach(s => {
           const isSelected = s.id === activeSessionId;
           const isConn = s.status === 'CONNECTED';
-          const dotColor = isConn ? 'var(--accent)' : 'var(--warning)';
+          const pillClass = isConn ? 'connected' : s.status === 'INITIALIZING' ? 'pending' : 'offline';
           const phone = s.user?.id ? s.user.id.split(':')[0] : 'Unpaired';
 
           html += \`
-            <div class="session-card \${isSelected ? 'selected' : ''}" onclick="selectActiveSession('\${s.id}')">
+            <div class="account-tile \${isSelected ? 'is-active' : ''}" onclick="selectActiveSession('\${s.id}')">
               <div>
-                <div class="session-meta-id">
-                  <span style="color: \${dotColor}; font-size: 10px;">●</span> \${s.id}
+                <div class="node-title">
+                  <span style="color: \${isConn ? 'var(--emerald-400)' : 'var(--amber-500)'}; font-size: 10px;">●</span> \${s.id}
                 </div>
-                <div class="session-meta-sub">\${phone}</div>
+                <div class="node-sub">\${phone}</div>
               </div>
-              <div style="font-size: 10.5px; font-weight: 500; color: \${isConn ? 'var(--accent)' : 'var(--text-muted)'};">
+              <div class="node-pill \${pillClass}">
                 \${s.status}
               </div>
             </div>
@@ -1366,13 +1797,14 @@ export function renderDashboardHtml(): string {
         const reconnectBtn = document.getElementById('btn-reconnect-node');
 
         if (data.status === 'CONNECTED') {
+          qrFrame.classList.remove('has-qr');
           dot.className = 'dot live';
           statusLbl.innerText = 'Connected & Active';
           statusLbl.style.color = 'var(--accent)';
           phoneLbl.innerText = data.user?.id ? data.user.id.split(':')[0] : 'Paired';
           qrImg.style.display = 'none';
           qrMsg.style.display = 'block';
-          qrMsg.innerHTML = '<span style="color: #10b981; font-weight: 600; font-size: 13px;">✓ Device Paired</span><br><span style="font-size: 11px; color: #9aa7b4;">Receiving WhatsApp traffic</span>';
+          qrMsg.innerHTML = '<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;"><div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(35, 134, 54, 0.2); border: 1px solid #238636; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #3fb950;">✓</div><div style="font-weight: 600; font-size: 13px; color: #3fb950;">Device Paired</div><div style="font-size: 11px; color: var(--text-muted);">Receiving WhatsApp traffic</div></div>';
           if (reconnectBtn) reconnectBtn.style.display = 'none';
         } else {
           dot.className = 'dot';
@@ -1381,26 +1813,30 @@ export function renderDashboardHtml(): string {
           phoneLbl.innerText = 'Waiting for scan/code';
 
           if (data.pairingCode) {
+            qrFrame.classList.remove('has-qr');
             qrImg.style.display = 'none';
             qrMsg.style.display = 'block';
-            qrMsg.innerHTML = '<div style="font-size: 11px; color: #5e6d7d; margin-bottom: 4px;">Enter on Phone:</div><div style="font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #10b981; background: #061912; padding: 6px 10px; border-radius: 4px; border: 1px solid #10b981;">' + data.pairingCode + '</div>';
+            qrMsg.innerHTML = '<div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">Enter on Phone:</div><div style="font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: #3fb950; background: rgba(35, 134, 54, 0.15); padding: 6px 12px; border-radius: 6px; border: 1px solid #238636; letter-spacing: 2px;">' + data.pairingCode + '</div>';
           } else if (data.hasQrCode) {
             try {
               const qrRes = await fetch('/api/sessions/' + activeSessionId + '/qr');
               if (qrRes.ok) {
                 const qrData = await qrRes.json();
                 if (qrData.qrDataUrl) {
+                  qrFrame.classList.add('has-qr');
                   qrMsg.style.display = 'none';
                   qrImg.src = qrData.qrDataUrl;
                   qrImg.style.display = 'block';
                 }
               }
             } catch (e) {
+              qrFrame.classList.add('has-qr');
               qrMsg.style.display = 'none';
               qrImg.src = '/api/sessions/' + activeSessionId + '/qr?format=image&t=' + Date.now();
               qrImg.style.display = 'block';
             }
           } else {
+            qrFrame.classList.remove('has-qr');
             qrImg.style.display = 'none';
             qrMsg.style.display = 'block';
             qrMsg.innerText = 'Initializing QR code for ' + activeSessionId + '...';
@@ -1459,9 +1895,9 @@ export function renderDashboardHtml(): string {
             {
               label: 'Heap Used (MB)',
               data: [],
-              borderColor: '#10b981',
-              backgroundColor: 'rgba(16, 185, 129, 0.08)',
-              borderWidth: 1.8,
+              borderColor: '#2ea043',
+              backgroundColor: 'rgba(46, 160, 67, 0.08)',
+              borderWidth: 2,
               fill: true,
               tension: 0.25,
               pointRadius: 2,
@@ -1469,9 +1905,9 @@ export function renderDashboardHtml(): string {
             {
               label: 'Process RSS (MB)',
               data: [],
-              borderColor: '#0284c7',
+              borderColor: '#1f6feb',
               backgroundColor: 'transparent',
-              borderWidth: 1.4,
+              borderWidth: 1.5,
               borderDash: [4, 4],
               tension: 0.2,
               pointRadius: 1,
@@ -1485,24 +1921,25 @@ export function renderDashboardHtml(): string {
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: '#12161b',
-              borderColor: '#222933',
+              backgroundColor: '#161b22',
+              borderColor: 'rgba(240, 246, 252, 0.1)',
               borderWidth: 1,
-              titleColor: '#f0f3f6',
-              bodyColor: '#9aa7b4',
-              padding: 8,
-              bodyFont: { family: 'JetBrains Mono', size: 11 }
+              titleColor: '#f0f6fc',
+              bodyColor: '#8b949e',
+              padding: 10,
+              cornerRadius: 6,
+              bodyFont: { family: 'JetBrains Mono', size: 11.5 }
             }
           },
           scales: {
             x: {
-              grid: { color: 'rgba(34, 41, 51, 0.6)' },
-              ticks: { color: '#5e6d7d', font: { family: 'JetBrains Mono', size: 10 } }
+              grid: { color: 'rgba(240, 246, 252, 0.04)' },
+              ticks: { color: '#6e7681', font: { family: 'JetBrains Mono', size: 10 } }
             },
             y: {
-              grid: { color: 'rgba(34, 41, 51, 0.6)' },
+              grid: { color: 'rgba(240, 246, 252, 0.04)' },
               ticks: {
-                color: '#5e6d7d',
+                color: '#6e7681',
                 font: { family: 'JetBrains Mono', size: 10 },
                 callback: val => val + ' MB'
               }
@@ -1648,6 +2085,179 @@ export function renderDashboardHtml(): string {
       } finally {
         btn.disabled = false;
         btn.innerText = 'Evaluate Guardrail Filter';
+      }
+    }
+
+    // WhatsApp Simulator Client Functions
+    function fillSimulator(txt) {
+      const inp = document.getElementById('wa-sim-input');
+      if (inp) {
+        inp.value = txt;
+        inp.focus();
+      }
+    }
+
+    function fillAndSendSimulator(txt) {
+      const inp = document.getElementById('wa-sim-input');
+      if (inp) {
+        inp.value = txt;
+        sendSimMessage();
+      }
+    }
+
+    function clearSimulatorChat() {
+      const stream = document.getElementById('wa-chat-stream');
+      if (stream) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        stream.innerHTML = \`
+          <div class="wa-bubble inbound">
+            <div>নমস্কার! আমি আপনার WhatsApp Enterprise AI Agent। যেকোনো ইনভেন্টরি, স্টক, সেলস বা অর্ডার সম্পর্কে বাংলায়, হিন্দিতে বা ইংরেজিতে প্রশ্ন করতে পারেন। আমি সাথে সাথে অডিও ভয়েস নোটেও উত্তর দিতে পারি।</div>
+            <div class="wa-msg-meta">\${timeStr}</div>
+          </div>
+        \`;
+      }
+    }
+
+    function simulateVoiceQuery() {
+      const sampleQueries = [
+        'আমাদের স্টকে কী কী পণ্য আছে?',
+        'আজকের টোটাল সেলস কত?',
+        'आज की टोटल सेल्स और कस्टमर कितने हैं?',
+        'What is our current inventory summary?'
+      ];
+      const randomQuery = sampleQueries[Math.floor(Math.random() * sampleQueries.length)];
+      const inp = document.getElementById('wa-sim-input');
+      if (inp) {
+        inp.value = '🎙️ [Voice Note]: "' + randomQuery + '"';
+        sendSimMessage();
+      }
+    }
+
+    let activeSimAudio = null;
+
+    async function playSimVoice(btn, text) {
+      const speechText = text || (btn ? btn.dataset.voiceText : '') || '';
+      if (!speechText) return;
+
+      if (activeSimAudio) {
+        activeSimAudio.pause();
+        activeSimAudio = null;
+        document.querySelectorAll('.wa-voice-play-btn').forEach(b => b.innerText = '▶');
+      }
+
+      btn.innerText = '⏳';
+      try {
+        const res = await fetch('/api/voice/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: speechText })
+        });
+        if (!res.ok) throw new Error('Voice generation failed');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        activeSimAudio = audio;
+        btn.innerText = '⏸';
+
+        audio.onended = () => {
+          btn.innerText = '▶';
+          activeSimAudio = null;
+        };
+        audio.onerror = () => {
+          btn.innerText = '▶';
+          activeSimAudio = null;
+        };
+        audio.play();
+      } catch (err) {
+        console.error('Sim voice error', err);
+        btn.innerText = '▶';
+      }
+    }
+
+    async function sendSimMessage() {
+      const input = document.getElementById('wa-sim-input');
+      const text = input ? input.value.trim() : '';
+      if (!text) return;
+
+      input.value = '';
+      const stream = document.getElementById('wa-chat-stream');
+      const status = document.getElementById('wa-sim-status');
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      // Append User message (Outbound bubble)
+      const userBubble = document.createElement('div');
+      userBubble.className = 'wa-bubble outbound';
+      userBubble.innerHTML = \`
+        <div>\${text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        <div class="wa-msg-meta"><span>\${timeStr}</span> <span style="color: #53bdeb;">✓✓</span></div>
+      \`;
+      stream.appendChild(userBubble);
+      stream.scrollTop = stream.scrollHeight;
+
+      if (status) {
+        status.innerText = 'typing...';
+        status.classList.add('typing');
+      }
+
+      const typingBubble = document.createElement('div');
+      typingBubble.className = 'wa-typing-dots';
+      typingBubble.id = 'wa-typing-indicator';
+      typingBubble.innerHTML = '<span class="wa-typing-dot"></span><span class="wa-typing-dot"></span><span class="wa-typing-dot"></span>';
+      stream.appendChild(typingBubble);
+      stream.scrollTop = stream.scrollHeight;
+
+      try {
+        const res = await fetch('/api/erp/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: text, senderPhone: '919876543210' })
+        });
+        const data = await res.json();
+        const replyText = data.formattedAnswer || 'Thank you for your message.';
+
+        const indicator = document.getElementById('wa-typing-indicator');
+        if (indicator) indicator.remove();
+
+        const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const replyBubble = document.createElement('div');
+        replyBubble.className = 'wa-bubble inbound';
+
+        const formattedHtml = replyText
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\\n/g, '<br>');
+
+        replyBubble.innerHTML = \`
+          <div>\${formattedHtml}</div>
+          <div class="wa-voice-bubble">
+            <button class="wa-voice-play-btn" title="Listen with Neural Voice Note" onclick="playSimVoice(this)">▶</button>
+            <div style="flex: 1;">
+              <div style="font-size: 11px; font-weight: 600; color: #00a884;">🔊 Voice PTT Audio Available</div>
+              <div style="font-size: 10px; color: #8696a0;">Tap to play natural voice note</div>
+            </div>
+          </div>
+          <div class="wa-msg-meta">\${botTime}</div>
+        \`;
+        const playBtn = replyBubble.querySelector('.wa-voice-play-btn');
+        if (playBtn) playBtn.dataset.voiceText = replyText;
+        stream.appendChild(replyBubble);
+        stream.scrollTop = stream.scrollHeight;
+      } catch (err) {
+        const indicator = document.getElementById('wa-typing-indicator');
+        if (indicator) indicator.remove();
+
+        const errorBubble = document.createElement('div');
+        errorBubble.className = 'wa-bubble inbound';
+        errorBubble.innerHTML = '<div style="color: #f87171;">⚠️ Network error: ' + err.message + '</div><div class="wa-msg-meta">' + timeStr + '</div>';
+        stream.appendChild(errorBubble);
+        stream.scrollTop = stream.scrollHeight;
+      } finally {
+        if (status) {
+          status.innerText = 'online • listening for voice & text';
+          status.classList.remove('typing');
+        }
       }
     }
 

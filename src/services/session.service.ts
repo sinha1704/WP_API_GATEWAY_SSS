@@ -137,6 +137,19 @@ export class SessionManager {
       return existing;
     }
 
+    // Clean up old socket listeners if reconnecting to avoid memory leaks
+    if (existing?.socket) {
+      try {
+        existing.socket.ev.removeAllListeners('connection.update');
+        existing.socket.ev.removeAllListeners('creds.update');
+        existing.socket.ev.removeAllListeners('messages.upsert');
+        existing.socket.ev.removeAllListeners('messages.update');
+        existing.socket.end(undefined);
+      } catch (cleanErr) {
+        // Safe to ignore on cleanup
+      }
+    }
+
     const sessionDir = path.join(this.baseStorageDir, sessionId);
     if (!existsSync(sessionDir)) {
       await fsPromises.mkdir(sessionDir, { recursive: true });

@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "whatsapp-api-gateway",
   "version": "1.0.0",
   "description": "Production-Grade, Self-Hosted WhatsApp API Gateway with Baileys, Anti-Ban throttling, AI bridge, and multi-session management",

@@ -177,15 +177,16 @@ Return ONLY raw JSON, with no markdown code blocks or additional text.`;
     const isBengali = /[\u0980-\u09FF]/.test(question);
     const isHindi = /[\u0900-\u097F]/.test(question);
 
-    const systemPrompt = `You are a real human team member responding on WhatsApp to a colleague or customer.
-Translate the database query results into a natural, conversational WhatsApp message.
+    const systemPrompt = `You are an authentic, warm human team member chatting directly on WhatsApp with a customer or team mate.
+Translate the database results into a completely natural, human WhatsApp text reply.
 
-Strict Rules:
-- Talk like a real human person chatting on WhatsApp.
-- NEVER say "ERP Report", "Query Executed", "Verified via ERP Read-Only Database", or show SQL code.
-- NEVER use rigid corporate templates.
-- State the numbers and items naturally and directly.
-- Reply in the same language as the question (${isBengali ? 'Bengali' : isHindi ? 'Hindi' : 'English'}).`;
+CRITICAL RULES:
+- Sound like a real person on WhatsApp (friendly, concise, conversational).
+- NEVER use markdown bullet lists (- **Item** or *), robotic tables, or headers. Write in natural sentences or commas just like a person texts on their phone.
+- NEVER say "ERP Report", "Query Executed", "Verified via ERP Read-Only Database", or mention SQL or systems.
+- If in Bengali, speak warm colloquial Bengali (e.g. "হ্যাঁ ভাই, আমাদের কাছে ওয়্যারলেস মাউস আছে ১৪২টি...").
+- If in Hindi, speak warm conversational Hindi (e.g. "जी बिल्कुल, हमारे पास अभी...").
+- Reply in the exact same language as the customer's question (${isBengali ? 'Bengali' : isHindi ? 'Hindi' : 'English'}).`;
 
     const userPrompt = `Question: "${question}"
 Data Found:
@@ -238,34 +239,31 @@ Provide the natural WhatsApp reply:`;
       return `We currently have ${stock} items in stock right now.`;
     }
 
-    // Itemized listing
+    // Itemized listing - 100% natural conversational format without bullet points
     if (isBengali) {
-      let msg = `হ্যাঁ দেখছি, আমাদের কাছে রয়েছে:\n`;
-      for (const item of rows.slice(0, 5)) {
-        if (item.name && item.stock_quantity !== undefined) {
-          msg += `• ${item.name}: ${item.stock_quantity}টি বাকি আছে (দাম: $${item.unit_price})\n`;
-        }
-      }
-      return msg.trim();
+      const itemsList = rows
+        .slice(0, 5)
+        .filter((r) => r.name)
+        .map((r) => `${r.name} (${r.stock_quantity || 0}টি স্টকে আছে, দাম $${r.unit_price || 0})`)
+        .join(', ');
+      return `হ্যাঁ দেখছি, আমাদের কাছে বর্তমানে রয়েছে: ${itemsList}।`;
     }
 
     if (isHindi) {
-      let msg = `जी, हमारे पास ये स्टॉक्स हैं:\n`;
-      for (const item of rows.slice(0, 5)) {
-        if (item.name && item.stock_quantity !== undefined) {
-          msg += `• ${item.name}: ${item.stock_quantity} पीस मौजूद हैं (रेट: $${item.unit_price})\n`;
-        }
-      }
-      return msg.trim();
+      const itemsList = rows
+        .slice(0, 5)
+        .filter((r) => r.name)
+        .map((r) => `${r.name} (${r.stock_quantity || 0} पीस उपलब्ध हैं, रेट $${r.unit_price || 0})`)
+        .join(', ');
+      return `जी, हमारे पास अभी ये सामान मौजूद हैं: ${itemsList}।`;
     }
 
-    let answer = `Here is what we have in stock:\n`;
-    for (const item of rows.slice(0, 5)) {
-      if (item.name && item.stock_quantity !== undefined) {
-        answer += `• ${item.name}: ${item.stock_quantity} available ($${item.unit_price})\n`;
-      }
-    }
-    return answer.trim();
+    const itemsList = rows
+      .slice(0, 5)
+      .filter((r) => r.name)
+      .map((r) => `${r.name} (${r.stock_quantity || 0} in stock at $${r.unit_price || 0})`)
+      .join(', ');
+    return `Here is what we have in stock right now: ${itemsList}.`;
   }
 
   /**
