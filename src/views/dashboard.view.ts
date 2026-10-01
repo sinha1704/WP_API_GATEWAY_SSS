@@ -640,39 +640,55 @@ export function renderDashboardHtml(): string {
     .rbac-mode-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 20px;
+      gap: 16px;
+      margin-bottom: 22px;
     }
 
     .rbac-mode-card {
       background: var(--bg-surface);
-      border: 1.5px solid var(--border-subtle);
+      border: 1.5px solid var(--border-default);
       border-radius: var(--radius-md);
-      padding: 16px;
+      padding: 18px 20px;
       display: flex;
-      gap: 14px;
+      gap: 16px;
       cursor: pointer;
       align-items: flex-start;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
+      user-select: none;
     }
 
     .rbac-mode-card:hover {
       border-color: var(--border-active);
       background: var(--bg-elevated);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .rbac-mode-card.is-active {
       border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.05);
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35), 0 4px 16px rgba(0, 0, 0, 0.25);
+      background: linear-gradient(145deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5), 0 8px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .rbac-mode-card.is-active::after {
+      content: 'ACTIVE';
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #38bdf8;
+      color: #0b0f17;
     }
 
     .rbac-mode-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -680,52 +696,55 @@ export function renderDashboardHtml(): string {
       background: var(--bg-subtle);
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
+      transition: all 0.2s ease;
     }
 
     .rbac-mode-card.is-active .rbac-mode-icon {
-      background: rgba(56, 189, 248, 0.12);
-      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.4);
       color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
     }
 
     .rbac-mode-title {
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-main);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
     }
 
     .rbac-mode-desc {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-sub);
-      margin-top: 4px;
-      line-height: 1.5;
+      margin-top: 6px;
+      line-height: 1.55;
     }
 
     .rbac-dropzone {
-      border: 2px dashed var(--border-active);
+      border: 2px dashed rgba(56, 189, 248, 0.35);
       border-radius: var(--radius-md);
-      padding: 22px 20px;
+      padding: 26px 22px;
       text-align: center;
-      background: rgba(15, 23, 42, 0.4);
+      background: rgba(15, 23, 42, 0.55);
       transition: all 0.2s ease;
       cursor: pointer;
     }
 
     .rbac-dropzone:hover, .rbac-dropzone.is-dragover {
       border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.06);
+      background: rgba(56, 189, 248, 0.08);
+      box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.1);
     }
 
     .contact-chip-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      max-height: 220px;
+      gap: 9px;
+      max-height: 240px;
       overflow-y: auto;
-      padding: 10px;
+      padding: 12px;
       background: var(--bg-canvas);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
@@ -734,41 +753,45 @@ export function renderDashboardHtml(): string {
     .contact-badge {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       color: var(--text-main);
       font-family: var(--font-mono);
-      font-size: 11.5px;
-      padding: 4px 9px;
-      border-radius: 5px;
-      transition: border-color 0.15s ease;
+      font-size: 12px;
+      padding: 5px 11px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .contact-badge:hover {
       border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.06);
     }
 
     .contact-badge-del {
       color: var(--text-muted);
       cursor: pointer;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
+      padding: 1px 3px;
+      border-radius: 3px;
+      transition: all 0.15s;
     }
 
     .contact-badge-del:hover {
-      color: var(--status-danger);
+      color: #ffffff;
+      background: var(--status-danger);
     }
 
     .whitelist-stats-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 12px;
+      margin-bottom: 10px;
+      font-size: 12.5px;
       color: var(--text-sub);
     }
 
@@ -1429,23 +1452,25 @@ export function renderDashboardHtml(): string {
 
         <!-- TAB: ENTERPRISE ACCESS CONTROL & RBAC WHITELIST MANAGER -->
         <div id="pane-rbac" class="tab-content-area">
-          <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 18px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+          <!-- Header Bar -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; flex-wrap: wrap; gap: 12px;">
             <div>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0;">Enterprise Multi-Tenant RBAC Access Policy</h3>
-                <span class="brand-badge" id="rbac-node-pill">Node: session-1</span>
-                <span class="brand-badge" id="rbac-mode-indicator" style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Public Mode</span>
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">Enterprise Access Control & RBAC Policy</h3>
+                <span class="brand-badge" id="rbac-node-pill" style="font-size: 11px; padding: 3px 9px;">Node: session-1</span>
+                <span class="brand-badge" id="rbac-mode-indicator" style="font-size: 11px; padding: 3px 9px;">Loading...</span>
               </div>
-              <p style="font-size: 12px; color: var(--text-sub); margin-top: 5px; line-height: 1.5; max-width: 780px;">
-                Govern incoming message permissions with socket-level zero-trust enforcement. In <b>Restricted Whitelist Mode</b>, inbound messages from unlisted numbers are dropped instantly before read receipts are generated — <b>ensuring zero blue ticks, zero database ERP lookups, and zero LLM prompt leakage.</b>
+              <p style="font-size: 12px; color: var(--text-sub); margin-top: 5px; margin-bottom: 0; line-height: 1.55; max-width: 820px;">
+                Enforce zero-trust message filtering at the gateway socket layer. In <b>Restricted VIP Whitelist</b> mode, any message from an unlisted number is instantly dropped before read receipts trigger — <b>zero blue ticks, zero AI prompt leakage, zero database ERP exposure.</b>
               </p>
             </div>
-            <div style="display: flex; gap: 8px;">
-              <button class="btn btn-ghost" style="font-size: 11.5px; padding: 6px 12px;" onclick="exportWhitelistCsv()" title="Export current whitelist to CSV">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn btn-ghost" style="font-size: 12px; padding: 7px 14px;" onclick="exportWhitelistCsv()" title="Export current whitelist to CSV">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                 Export CSV
               </button>
-              <button class="btn btn-solid-emerald" id="btn-save-rbac-top" style="font-size: 11.5px; padding: 6px 14px;" onclick="saveRbacPolicy()">
+              <button class="btn btn-solid-emerald" id="btn-save-rbac-top" style="font-size: 12px; padding: 7px 16px;" onclick="saveRbacPolicy()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Save & Apply Policy
               </button>
             </div>
@@ -1453,94 +1478,101 @@ export function renderDashboardHtml(): string {
 
           <!-- Policy Selector Cards -->
           <div class="rbac-mode-grid">
-            <div class="rbac-mode-card is-active" id="card-rbac-all" onclick="selectRbacMode('all')">
+            <div class="rbac-mode-card" id="card-rbac-all" onclick="selectRbacMode('all')">
               <div class="rbac-mode-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               </div>
               <div style="flex: 1;">
                 <div class="rbac-mode-title">
                   <span>Public Mode (Unrestricted)</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">Global</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(52, 211, 153, 0.15); color: #34d399;">Global Access</span>
                 </div>
                 <div class="rbac-mode-desc">
-                  Accepts inquiries from any customer, client, or partner worldwide. AI Assistant answers queries, runs ERP stock checks, and transcribes voice notes automatically.
+                  Open for all inbound WhatsApp contacts worldwide. Ideal for public sales, customer support, and general product catalogs.
                 </div>
               </div>
             </div>
 
             <div class="rbac-mode-card" id="card-rbac-restricted" onclick="selectRbacMode('restricted')">
               <div class="rbac-mode-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </div>
               <div style="flex: 1;">
                 <div class="rbac-mode-title">
                   <span>Restricted VIP Whitelist</span>
-                  <span style="font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Zero-Trust Private</span>
+                  <span style="font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: rgba(245, 158, 11, 0.15); color: #f59e0b;">Zero-Trust Private</span>
                 </div>
                 <div class="rbac-mode-desc">
-                  Only authorized team leads, corporate VIPs, and client phone numbers in the whitelist below can interact. All other numbers are silently ignored with zero read ticks.
+                  Restricts node exclusively to authorized phone numbers listed below. Unauthorized senders are silently ignored with zero read receipts or database queries.
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Restricted Whitelist Management Workspace -->
-          <div id="rbac-whitelist-workspace" style="display: none; animation: fadeIn 0.2s ease;">
+          <div id="rbac-whitelist-workspace" style="display: none; animation: fadeIn 0.25s ease;">
             
             <!-- Bulk Upload Zone -->
-            <div style="margin-bottom: 20px;">
-              <label class="field-caption" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Bulk Import Contacts (CSV / Excel / TXT):</span>
-                <span style="font-size: 11px; color: var(--text-muted);">Supports international format with country code (e.g. 919876543210, +12025550143)</span>
-              </label>
+            <div style="margin-bottom: 22px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label class="field-caption" style="margin-bottom: 0; font-weight: 700; color: var(--text-main);">
+                  Bulk Import Numbers (CSV, TXT, Excel TSV):
+                </label>
+                <span style="font-size: 11px; color: var(--text-muted);">
+                  Auto-formats Indian (+91), US (+1), and global country codes
+                </span>
+              </div>
               
               <div class="rbac-dropzone" id="rbac-drop-area" onclick="document.getElementById('rbac-file-input').click()">
                 <input type="file" id="rbac-file-input" accept=".csv, .txt, .tsv, .xlsx, .xls" style="display: none;" onchange="handleRbacFileUpload(this.files)">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-                  <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 14px;">
+                  <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(56, 189, 248, 0.14); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                   </div>
                   <div style="text-align: left;">
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-main);">
-                      Click to browse or drag & drop CSV, TXT, or Excel files
+                    <div style="font-size: 13.5px; font-weight: 600; color: var(--text-main);">
+                      Click to choose or drag & drop CSV, TXT, or Excel files here
                     </div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                      Columns or rows containing phone numbers will be automatically extracted, cleaned, and deduplicated.
+                    <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px;">
+                      Reads contact lists in rows or columns, cleans whitespace, removes symbols, and automatically deduplicates numbers.
                     </div>
                   </div>
                 </div>
               </div>
-              <div id="rbac-upload-status" style="font-size: 11.5px; color: #34d399; margin-top: 6px; display: none;"></div>
+              <div id="rbac-upload-status" style="font-size: 12px; margin-top: 8px; display: none;"></div>
             </div>
 
-            <!-- Manual Add Single Contact Field -->
-            <div style="display: flex; gap: 10px; margin-bottom: 18px;">
-              <div style="flex: 1;">
-                <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Type single phone number (e.g. 919382468250) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
+            <!-- Manual Single Contact Input -->
+            <div style="margin-bottom: 22px;">
+              <label class="field-caption" style="font-weight: 700; color: var(--text-main);">Add Authorized Contact Manually:</label>
+              <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                  <input type="text" id="inp-rbac-single" class="field-input field-mono" placeholder="Enter phone number with country code (e.g. 919382468250) and press Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addSingleContact();}">
+                </div>
+                <button class="btn btn-ghost" style="padding: 0 18px;" onclick="addSingleContact()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
+                  Add Number
+                </button>
               </div>
-              <button class="btn btn-ghost" style="padding: 0 16px;" onclick="addSingleContact()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="12" y1="12" y2="12"/></svg>
-                Add Number
-              </button>
             </div>
 
             <!-- Whitelisted Contacts Overview & Tags Container -->
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 18px; margin-bottom: 22px;">
               <div class="whitelist-stats-bar">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-weight: 700; color: var(--text-main); font-size: 13px;">Authorized VIP Whitelist Directory</span>
-                  <span id="whitelist-count-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-family: var(--font-mono);">0 numbers</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="font-weight: 700; color: var(--text-main); font-size: 13.5px;">Authorized VIP Whitelist Directory</span>
+                  <span id="whitelist-count-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 12px; font-family: var(--font-mono);">0 numbers</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <input type="text" id="inp-filter-whitelist" class="field-input field-mono" style="padding: 4px 8px; font-size: 11px; width: 180px;" placeholder="Search numbers..." oninput="filterContactChips()">
-                  <button class="btn btn-ghost" style="font-size: 11px; padding: 4px 8px;" onclick="clearAllWhitelistedContacts()">Clear All</button>
+                  <input type="text" id="inp-filter-whitelist" class="field-input field-mono" style="padding: 5px 10px; font-size: 11.5px; width: 200px;" placeholder="Search whitelist..." oninput="filterContactChips()">
+                  <button class="btn btn-ghost" style="font-size: 11.5px; padding: 5px 10px;" onclick="clearAllWhitelistedContacts()">Clear All</button>
                 </div>
               </div>
 
               <!-- Visual Chips List -->
               <div class="contact-chip-container" id="whitelist-chips-box">
-                <div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">
-                  No authorized numbers configured. Upload a CSV file or add phone numbers above to restrict access.
+                <div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center; width: 100%;">
+                  No authorized numbers configured yet. Upload a CSV file or add phone numbers above to restrict access.
                 </div>
               </div>
             </div>
@@ -1548,11 +1580,11 @@ export function renderDashboardHtml(): string {
           </div>
 
           <!-- Bottom Save Actions -->
-          <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border-subtle); padding-top: 16px; margin-top: 10px;">
-            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 9px 20px; font-size: 13px;" onclick="saveRbacPolicy()">
+          <div style="display: flex; align-items: center; gap: 14px; border-top: 1px solid var(--border-subtle); padding-top: 18px;">
+            <button class="btn btn-solid-emerald" id="btn-save-rbac" style="padding: 10px 24px; font-size: 13px;" onclick="saveRbacPolicy()">
               Apply RBAC Rules to Node
             </button>
-            <span id="rbac-save-msg" style="font-size: 12px; color: #34d399; font-weight: 600; display: none;">✓ RBAC Policy successfully synced to active session</span>
+            <span id="rbac-save-msg" style="font-size: 12px; color: #34d399; font-weight: 600; display: none;"></span>
           </div>
 
         </div>
@@ -2165,15 +2197,17 @@ export function renderDashboardHtml(): string {
             qrMsg.innerText = 'Initializing QR code for ' + activeSessionId + '...';
           }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
-        }
         // Update RBAC status badge and form fields
-        // Sync RBAC status across dashboard indicators and active form state
+        // Sync RBAC status across dashboard indicators without wiping user uncommitted edits
         const rbacLbl = document.getElementById('tbl-rbac-mode');
         const rbacMode = data.accessMode || 'all';
         const allowedList = data.allowedContacts || [];
 
-        currentRbacState.mode = rbacMode;
-        currentRbacState.allowedContacts = [...allowedList];
+        // Only overwrite current state if user does NOT have pending unsaved local changes
+        if (!currentRbacState.hasUnsavedChanges) {
+          currentRbacState.mode = rbacMode;
+          currentRbacState.allowedContacts = [...allowedList];
+        }
 
         if (rbacLbl) {
           rbacLbl.innerText = rbacMode === 'restricted' ? ('Restricted (' + allowedList.length + ' VIPs)') : 'All (Public)';
@@ -2189,12 +2223,16 @@ export function renderDashboardHtml(): string {
     // Enterprise RBAC State Management & Interactive Chip Component
     const currentRbacState = {
       mode: 'all',
-      allowedContacts: []
+      allowedContacts: [],
+      hasUnsavedChanges: false
     };
 
     function selectRbacMode(mode) {
       currentRbacState.mode = mode;
+      currentRbacState.hasUnsavedChanges = true;
       renderRbacUi();
+      // Auto persist immediately so background polling never overwrites user's deliberate mode choice
+      saveRbacPolicy(true);
     }
 
     function renderRbacUi() {
@@ -2253,20 +2291,26 @@ export function renderDashboardHtml(): string {
         return;
       }
       currentRbacState.allowedContacts.unshift(num);
+      currentRbacState.hasUnsavedChanges = true;
       inp.value = '';
       renderContactChips();
+      saveRbacPolicy(true);
     }
 
     function removeContact(num) {
       currentRbacState.allowedContacts = currentRbacState.allowedContacts.filter(c => c !== num);
+      currentRbacState.hasUnsavedChanges = true;
       renderContactChips();
+      saveRbacPolicy(true);
     }
 
     function clearAllWhitelistedContacts() {
       if (currentRbacState.allowedContacts.length === 0) return;
       if (!confirm('Clear all ' + currentRbacState.allowedContacts.length + ' whitelisted numbers?')) return;
       currentRbacState.allowedContacts = [];
+      currentRbacState.hasUnsavedChanges = true;
       renderContactChips();
+      saveRbacPolicy(true);
     }
 
     function renderContactChips() {
@@ -2287,9 +2331,9 @@ export function renderDashboardHtml(): string {
 
       if (filtered.length === 0) {
         if (currentRbacState.allowedContacts.length === 0) {
-          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">No authorized numbers configured. Upload a CSV file or add phone numbers above to restrict access.</div>';
+          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center; width: 100%;">No authorized numbers configured yet. Upload a CSV file or add phone numbers above to restrict access.</div>';
         } else {
-          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 16px; text-align: center; width: 100%;">No contacts match filter "' + filter + '"</div>';
+          box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; padding: 20px; text-align: center; width: 100%;">No contacts match filter "' + filter + '"</div>';
         }
         return;
       }
@@ -2351,7 +2395,12 @@ export function renderDashboardHtml(): string {
             }
           });
 
+          if (addedCount > 0) {
+            currentRbacState.hasUnsavedChanges = true;
+          }
+
           renderContactChips();
+          saveRbacPolicy(true);
 
           if (statusDiv) {
             statusDiv.style.display = 'block';
@@ -2424,7 +2473,7 @@ export function renderDashboardHtml(): string {
       document.body.removeChild(link);
     }
 
-    async function saveRbacPolicy() {
+    async function saveRbacPolicy(silent = false) {
       const mode = currentRbacState.mode;
       const allowedContacts = currentRbacState.allowedContacts;
 
@@ -2432,8 +2481,10 @@ export function renderDashboardHtml(): string {
       const btn2 = document.getElementById('btn-save-rbac-top');
       const msg = document.getElementById('rbac-save-msg');
 
-      if (btn1) btn1.disabled = true;
-      if (btn2) btn2.disabled = true;
+      if (!silent) {
+        if (btn1) btn1.disabled = true;
+        if (btn2) btn2.disabled = true;
+      }
 
       try {
         const res = await fetch('/api/sessions/' + activeSessionId + '/access', {
@@ -2442,15 +2493,27 @@ export function renderDashboardHtml(): string {
           body: JSON.stringify({ accessMode: mode, allowedContacts })
         });
         if (!res.ok) throw new Error('Failed to update access control');
+        
+        // Clear dirty flag upon confirmed server persistence
+        currentRbacState.hasUnsavedChanges = false;
+
         if (msg) {
           msg.style.display = 'inline';
-          msg.innerText = '✓ RBAC rules synced to node "' + activeSessionId + '" (' + mode.toUpperCase() + ', ' + allowedContacts.length + ' contacts)';
+          msg.innerText = '✓ RBAC rules active for "' + activeSessionId + '" (' + mode.toUpperCase() + ', ' + allowedContacts.length + ' contacts)';
           setTimeout(() => { msg.style.display = 'none'; }, 4000);
         }
-        await loadActiveSessionDetails();
-        await refreshSessionList();
+
+        const rbacLbl = document.getElementById('tbl-rbac-mode');
+        if (rbacLbl) {
+          rbacLbl.innerText = mode === 'restricted' ? ('Restricted (' + allowedContacts.length + ' VIPs)') : 'All (Public)';
+          rbacLbl.style.color = mode === 'restricted' ? '#f59e0b' : '#34d399';
+        }
       } catch (err) {
-        alert('RBAC update failed: ' + err.message);
+        if (!silent) {
+          alert('RBAC update failed: ' + err.message);
+        } else {
+          console.error('Auto-sync RBAC failed:', err);
+        }
       } finally {
         if (btn1) btn1.disabled = false;
         if (btn2) btn2.disabled = false;
