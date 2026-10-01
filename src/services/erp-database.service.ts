@@ -120,26 +120,42 @@ export class ErpDatabaseService {
   private pgPool: Pool | null = null;
 
   private constructor() {
-    if (config.ERP_DB_TYPE === 'postgres' && config.ERP_DB_HOST) {
+    const hasPostgres = config.DATABASE_URL || config.ERP_DB_TYPE === 'postgres';
+    if (hasPostgres) {
       try {
-        this.pgPool = new Pool({
-          host: config.ERP_DB_HOST,
-          port: config.ERP_DB_PORT,
-          user: config.ERP_DB_USER, // e.g. ai_reader (Read-only user)
-          password: config.ERP_DB_PASSWORD,
-          database: config.ERP_DB_NAME,
-          ssl: config.ERP_DB_SSL ? { rejectUnauthorized: false } : false,
-          max: 5,
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 5000,
-        });
-        logger.info(`ERP Database configured with PostgreSQL at ${config.ERP_DB_HOST}:${config.ERP_DB_PORT}/${config.ERP_DB_NAME} (User: ${config.ERP_DB_USER})`);
+        if (config.DATABASE_URL) {
+          this.pgPool = new Pool({
+            connectionString: config.DATABASE_URL,
+            ssl: { rejectUnauthorized: false },
+            max: 5,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 10000,
+          });
+          logger.info('ERP Database successfully configured with Live Cloud PostgreSQL (DATABASE_URL)');
+        } else if (config.ERP_DB_HOST) {
+          this.pgPool = new Pool({
+            host: config.ERP_DB_HOST,
+            port: config.ERP_DB_PORT,
+            user: config.ERP_DB_USER,
+            password: config.ERP_DB_PASSWORD,
+            database: config.ERP_DB_NAME,
+            ssl: config.ERP_DB_SSL ? { rejectUnauthorized: false } : false,
+            max: 5,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 5000,
+          });
+          logger.info(`ERP Database configured with PostgreSQL at ${config.ERP_DB_HOST}:${config.ERP_DB_PORT}/${config.ERP_DB_NAME}`);
+        }
       } catch (err: any) {
         logger.error({ err: err.message }, 'Failed to initialize PostgreSQL pool for ERP');
       }
     } else {
       logger.info('ERP Database initialized with Built-in Safe Mock Database (Local/Demo Stage)');
     }
+  }
+
+  public getPool(): Pool | null {
+    return this.pgPool;
   }
 
   public static getInstance(): ErpDatabaseService {

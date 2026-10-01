@@ -33,6 +33,12 @@ services:
         value: groq
       - key: ERP_DB_TYPE
         value: mock
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: AUDIT_LOG_ENABLED
+        value: "true"
       - key: PRESENCE_MIN_DELAY_MS
         value: "1500"
       - key: PRESENCE_MAX_DELAY_MS

@@ -23,6 +23,9 @@ import { throttledQueue } from './queue.service.js';
 import { voiceTranscriptionService } from './voice.service.js';
 import { erpQueryAgentService } from './erp-agent.service.js';
 import { mediaGenerationService } from './media-gen.service.js';
+import { erpDatabaseService } from './erp-database.service.js';
+import { usePostgresAuthState, listPostgresSessions, clearPostgresSession } from './session-db-auth.service.js';
+import { auditLogService } from './audit-log.service.js';
 
 export type SessionStatus = 'INITIALIZING' | 'SCAN_QR_CODE' | 'CONNECTED' | 'DISCONNECTED';
 
@@ -67,19 +70,36 @@ export class SessionManager {
 
   /**
    * Automatically restores and reconnects all existing saved sessions on server start
+   * Restores from PostgreSQL if configured, or falls back to local disk
    */
   public async autoRestoreSessions(): Promise<void> {
     try {
-      if (!existsSync(this.baseStorageDir)) return;
-      const entries = await fsPromises.readdir(this.baseStorageDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const credsPath = path.join(this.baseStorageDir, entry.name, 'creds.json');
-          if (existsSync(credsPath)) {
-            logger.info(`Found saved credentials for session "${entry.name}". Auto-restoring connection...`);
-            this.initSession(entry.name).catch((err) => {
-              logger.error({ sessionId: entry.name, err: err.message }, 'Failed to auto-restore session');
-            });
+      const restored = new Set<string>();
+
+      // 1. Check PostgreSQL persisted sessions if database connected
+      if (erpDatabaseService.getPool()) {
+        const pgSessions = await listPostgresSessions();
+        for (const sId of pgSessions) {
+          logger.info(`Found PostgreSQL cloud credentials for session "${sId}". Auto-restoring connection...`);
+          restored.add(sId);
+          this.initSession(sId).catch((err) => {
+            logger.error({ sessionId: sId, err: err.message }, 'Failed to auto-restore PostgreSQL session');
+          });
+        }
+      }
+
+      // 2. Also check local disk sessions
+      if (existsSync(this.baseStorageDir)) {
+        const entries = await fsPromises.readdir(this.baseStorageDir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && !restored.has(entry.name)) {
+            const credsPath = path.join(this.baseStorageDir, entry.name, 'creds.json');
+            if (existsSync(credsPath)) {
+              logger.info(`Found saved credentials for session "${entry.name}". Auto-restoring connection...`);
+              this.initSession(entry.name).catch((err) => {
+                logger.error({ sessionId: entry.name, err: err.message }, 'Failed to auto-restore session');
+              });
+            }
           }
         }
       }
@@ -202,7 +222,28 @@ export class SessionManager {
 
     this.sessions.set(sessionId, sessionInstance);
 
-    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+    // Prefer Cloud PostgreSQL Auth State for zero container-wipe session drops
+    let state: any;
+    let saveCreds: () => Promise<void>;
+
+    if (erpDatabaseService.getPool()) {
+      try {
+        const pgAuth = await usePostgresAuthState(sessionId);
+        state = pgAuth.state;
+        saveCreds = pgAuth.saveCreds;
+        logger.info(`[Session: ${sessionId}] Connected using persistent PostgreSQL Cloud Auth store.`);
+      } catch (pgErr: any) {
+        logger.warn({ sessionId, err: pgErr.message }, 'PostgreSQL auth state failed, falling back to local files');
+        const fileAuth = await useMultiFileAuthState(sessionDir);
+        state = fileAuth.state;
+        saveCreds = fileAuth.saveCreds;
+      }
+    } else {
+      const fileAuth = await useMultiFileAuthState(sessionDir);
+      state = fileAuth.state;
+      saveCreds = fileAuth.saveCreds;
+    }
+
     const { version } = await fetchLatestBaileysVersion();
 
     const socket = makeWASocket({
@@ -311,6 +352,12 @@ export class SessionManager {
           `WhatsApp Session Connected Successfully!`
         );
 
+        auditLogService.log({
+          sessionId,
+          eventType: 'SESSION_CONNECTED',
+          details: { user: sessionInstance.user },
+        }).catch(() => {});
+
         await webhookService.dispatch(
           {
             event: 'session.status',
@@ -413,6 +460,14 @@ export class SessionManager {
           { sessionId, remoteJid, sender: pushName, isVoiceNote, messageKeys: Object.keys(messageContent || {}), text: text.substring(0, 80) },
           'Inbound message received'
         );
+
+        // Audit Logging: Record inbound message
+        auditLogService.log({
+          sessionId,
+          eventType: 'MESSAGE_RECEIVED',
+          senderJid: remoteJid,
+          details: { text: text.substring(0, 150), isVoiceNote, pushName },
+        }).catch(() => {});
 
         // 1. Voice Note Processing: Download & Transcribe to Text
         if (isVoiceNote && audioMsg && sessionInstance.voiceQueryEnabled) {
@@ -581,6 +636,12 @@ export class SessionManager {
               );
 
               await sendResponse(erpResult.formattedAnswer);
+              auditLogService.log({
+                sessionId,
+                eventType: 'ERP_QUERY_REPLY',
+                senderJid: remoteJid,
+                details: { query: text, sql: erpResult.generatedSql },
+              }).catch(() => {});
               continue; // Successfully handled by ERP Query pipeline
             }
           } catch (erpErr: any) {
@@ -604,6 +665,12 @@ export class SessionManager {
               );
 
               await sendResponse(aiReply);
+              auditLogService.log({
+                sessionId,
+                eventType: 'AI_REPLY_SENT',
+                senderJid: remoteJid,
+                details: { query: text.substring(0, 100), replyPreview: aiReply.substring(0, 100) },
+              }).catch(() => {});
             }
           } catch (aiErr: any) {
             logger.error({ sessionId, err: aiErr.message }, 'AI Bridge response failed');
@@ -832,6 +899,9 @@ export class SessionManager {
     }
 
     this.sessions.delete(sessionId);
+
+    // Purge PostgreSQL cloud session keys if available
+    await clearPostgresSession(sessionId);
 
     const sessionDir = path.join(this.baseStorageDir, sessionId);
     if (existsSync(sessionDir)) {

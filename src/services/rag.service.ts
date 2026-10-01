@@ -66,9 +66,9 @@ export class RagKnowledgeService {
    * Initializes PostgreSQL knowledge_base table if connected to live DB
    */
   private async ensureDatabaseTable(): Promise<void> {
-    if (config.ERP_DB_TYPE === 'postgres' && (erpDatabaseService as any).pgPool) {
+    const pool = erpDatabaseService.getPool();
+    if (pool) {
       try {
-        const pool: Pool = (erpDatabaseService as any).pgPool;
         await pool.query(`
           CREATE TABLE IF NOT EXISTS enterprise_knowledge_docs (
             id SERIAL PRIMARY KEY,
@@ -107,9 +107,9 @@ export class RagKnowledgeService {
     this.memoryStore.push(cleanDoc);
 
     // Also persist to PostgreSQL if live
-    if (config.ERP_DB_TYPE === 'postgres' && (erpDatabaseService as any).pgPool) {
+    const pool = erpDatabaseService.getPool();
+    if (pool) {
       try {
-        const pool: Pool = (erpDatabaseService as any).pgPool;
         const res = await pool.query(
           `INSERT INTO enterprise_knowledge_docs (title, category, content, keywords) 
            VALUES ($1, $2, $3, $4) RETURNING id, created_at;`,

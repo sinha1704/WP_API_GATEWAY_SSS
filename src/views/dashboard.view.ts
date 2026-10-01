@@ -1566,6 +1566,10 @@ export function renderDashboardHtml(): string {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
             <span>Knowledge RAG</span>
           </div>
+          <div class="tab-item" id="tab-btn-audit" onclick="activateTab('pane-audit', this); loadAuditLogs();">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Audit Logs</span>
+          </div>
         </div>
 
         <!-- TAB 1: Telemetry Stream Chart -->
@@ -1925,7 +1929,14 @@ export function renderDashboardHtml(): string {
                 <input type="text" id="rag-new-cat" class="field-input" placeholder="Category" value="Policy" style="flex: 1;">
               </div>
               <textarea id="rag-new-content" class="field-input" style="height: 48px; font-size: 11.5px; margin-bottom: 8px;" placeholder="Document content..."></textarea>
-              <button class="btn btn-ghost" style="width: 100%; font-size: 12px; padding: 6px;" onclick="addRagDocument()">Upload to Knowledge Store</button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-ghost" style="flex: 1; font-size: 12px; padding: 6px;" onclick="addRagDocument()">Add Text</button>
+                <label class="btn btn-solid-emerald" style="flex: 1; font-size: 12px; padding: 6px; cursor: pointer; text-align: center; margin: 0;">
+                  <span>📄 Upload PDF</span>
+                  <input type="file" id="rag-pdf-input" accept=".pdf" style="display: none;" onchange="uploadPdfToRag(this)">
+                </label>
+              </div>
+              <div id="pdf-upload-status" style="font-size: 11px; color: var(--emerald-400); margin-top: 6px; display: none;"></div>
             </div>
           </div>
 
@@ -1938,6 +1949,43 @@ export function renderDashboardHtml(): string {
             </div>
           </div>
         </div>
+
+        <!-- TAB: ENTERPRISE AUDIT TRAIL LOGS -->
+        <div id="pane-audit" class="tab-content-area">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">Enterprise Audit Logs & Compliance Trail</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                Immutable PostgreSQL audit log of all inbound WhatsApp messages, AI interactions, ERP queries, and PDF uploads.
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="font-size: 12px; padding: 6px 14px;" onclick="loadAuditLogs()">
+              <span>🔄 Refresh Logs</span>
+            </button>
+          </div>
+
+          <div style="background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden;">
+            <div style="max-height: 380px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+                <thead>
+                  <tr style="background: var(--bg-subtle); border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+                    <th style="padding: 10px 14px; font-weight: 600;">Timestamp</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Event</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Node</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Sender</th>
+                    <th style="padding: 10px 14px; font-weight: 600;">Details</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-logs-tbody">
+                  <tr>
+                    <td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">Click "Audit Logs" tab or "Refresh Logs" to load live entries</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
 
 
         <!-- TAB: AUTHENTIC WHATSAPP LIVE DEVICE SIMULATOR -->
@@ -2138,6 +2186,72 @@ export function renderDashboardHtml(): string {
         }
       } catch (err) {
         showToast('Upload error: ' + err.message, 'error');
+      }
+    }
+
+    async function uploadPdfToRag(inputEl) {
+      const file = inputEl.files && inputEl.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById('pdf-upload-status');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.innerText = 'Extracting text and ingesting ' + file.name + '...';
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/rag/upload-pdf', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('PDF ' + file.name + ' parsed (' + data.pages + ' pages)! Added to RAG Knowledge Store.', 'success');
+          if (statusEl) {
+            statusEl.innerText = '✓ ' + file.name + ' successfully parsed (' + data.charactersExtracted + ' chars)';
+          }
+          await loadRagDocs();
+        } else {
+          showToast('Failed to parse PDF: ' + (data.error || 'Unknown error'), 'error');
+          if (statusEl) statusEl.innerText = '❌ Failed: ' + data.error;
+        }
+      } catch (err) {
+        showToast('PDF upload failed: ' + err.message, 'error');
+        if (statusEl) statusEl.innerText = '❌ Upload error';
+      } finally {
+        inputEl.value = '';
+      }
+    }
+
+    async function loadAuditLogs() {
+      try {
+        const tbody = document.getElementById('audit-logs-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: var(--text-muted);">Fetching live audit logs...</td></tr>';
+        const res = await fetch('/api/audit/logs');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!data.logs || data.logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: var(--text-muted);">No audit events recorded yet. Send a message to see entries appear in real time!</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.logs.map(log => {
+          const time = log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : '--';
+          const detailsStr = typeof log.details === 'object' ? JSON.stringify(log.details) : (log.details || '');
+          const badgeColor = log.eventType.includes('ERROR') ? '#f87171' : log.eventType.includes('AI') ? '#38bdf8' : log.eventType.includes('ERP') ? '#f59e0b' : '#34d399';
+          return '<tr style="border-bottom: 1px solid var(--border-subtle);">' +
+            '<td style="padding: 8px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">' + time + '</td>' +
+            '<td style="padding: 8px 14px;"><span style="background: rgba(255,255,255,0.06); color: ' + badgeColor + '; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 700; font-family: var(--font-mono);">' + log.eventType + '</span></td>' +
+            '<td style="padding: 8px 14px; font-family: var(--font-mono); font-size: 11px;">' + (log.sessionId || 'global') + '</td>' +
+            '<td style="padding: 8px 14px; font-family: var(--font-mono); font-size: 11px; color: var(--text-sub);">' + (log.senderJid ? log.senderJid.split('@')[0] : 'system') + '</td>' +
+            '<td style="padding: 8px 14px; font-size: 11.5px; color: var(--text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' + detailsStr.replace(/"/g, '&quot;') + '">' + detailsStr + '</td>' +
+          '</tr>';
+        }).join('');
+      } catch (err) {
+        const tbody = document.getElementById('audit-logs-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding: 16px; text-align: center; color: #f87171;">Failed to load audit logs: ' + err.message + '</td></tr>';
       }
     }
 

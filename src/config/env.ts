@@ -36,6 +36,7 @@ const envSchema = z.object({
   // ERP / Database Query Config
   ERP_QUERY_ENABLED: z.coerce.boolean().default(true),
   ERP_DB_TYPE: z.enum(['mock', 'postgres']).default('mock'),
+  DATABASE_URL: z.string().optional().default(''), // Neon / Supabase Cloud PostgreSQL connection string
   ERP_DB_HOST: z.string().default('localhost'),
   ERP_DB_PORT: z.coerce.number().default(5432),
   ERP_DB_USER: z.string().default('ai_reader'),
@@ -45,6 +46,10 @@ const envSchema = z.object({
   // ERP LLM Provider for Text-to-SQL & Answer Formatting
   ERP_LLM_PROVIDER: z.enum(['groq', 'gemini', 'openai']).default('groq'),
   ERP_LLM_MODEL: z.string().default('openai/gpt-oss-20b'),
+  // Upstash Serverless Redis for BullMQ Queue
+  REDIS_URL: z.string().optional().default(''),
+  // Enterprise Audit Logging
+  AUDIT_LOG_ENABLED: z.coerce.boolean().default(true),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

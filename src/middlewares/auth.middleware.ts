@@ -39,7 +39,8 @@ export async function authenticateApiKey(
     path === '/api/telemetry' ||
     path === '/api/voice/transcribe' ||
     path === '/api/voice/synthesize' ||
-    path.startsWith('/api/rag/')
+    path.startsWith('/api/rag/') ||
+    path.startsWith('/api/audit/')
   ) {
     return;
   }

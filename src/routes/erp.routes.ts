@@ -366,4 +366,96 @@ export async function erpRoutes(fastify: FastifyInstance) {
       });
     }
   );
+
+  /**
+   * 10. PDF & Document Upload & Auto-Parsing Endpoint
+   * Extracts text using zero-fee native pdf-parse and ingests into Knowledge RAG!
+   */
+  fastify.post(
+    '/api/rag/upload-pdf',
+    {
+      schema: {
+        description: 'Upload a company PDF document; extracts text and saves it into RAG Knowledge base for $0',
+        tags: ['Voice & ERP AI'],
+      },
+    },
+    async (request, reply) => {
+      if (!request.isMultipart()) {
+        return reply.status(400).send({ success: false, error: 'Multipart file upload required' });
+      }
+
+      const file = await request.file();
+      if (!file) {
+        return reply.status(400).send({ success: false, error: 'No PDF file attached' });
+      }
+
+      const buffer = await file.toBuffer();
+      const fileName = file.filename || 'uploaded-document.pdf';
+
+      try {
+        const pdfModule: any = await import('pdf-parse');
+        const pdfParse = pdfModule.default || pdfModule;
+        const pdfData = await pdfParse(buffer);
+        const extractedText = (pdfData.text || '').trim();
+
+        if (!extractedText) {
+          return reply.status(400).send({
+            success: false,
+            error: 'Could not extract readable text from the uploaded PDF document.',
+          });
+        }
+
+        const { ragKnowledgeService } = await import('../services/rag.service.js');
+        const { auditLogService } = await import('../services/audit-log.service.js');
+
+        const title = fileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        const doc = await ragKnowledgeService.addDocument({
+          title,
+          category: 'Uploaded PDF',
+          content: extractedText,
+        });
+
+        await auditLogService.log({
+          eventType: 'PDF_PARSED',
+          details: { fileName, pages: pdfData.numpages, charCount: extractedText.length },
+        });
+
+        return reply.send({
+          success: true,
+          fileName,
+          pages: pdfData.numpages,
+          charactersExtracted: extractedText.length,
+          preview: extractedText.substring(0, 300) + '...',
+          document: doc,
+        });
+      } catch (err: any) {
+        return reply.status(500).send({
+          success: false,
+          error: `PDF extraction failed: ${err.message}`,
+        });
+      }
+    }
+  );
+
+  /**
+   * 11. Live Audit Logs Endpoint
+   */
+  fastify.get(
+    '/api/audit/logs',
+    {
+      schema: {
+        description: 'Get recent audit trail logs from PostgreSQL or memory',
+        tags: ['Voice & ERP AI'],
+      },
+    },
+    async (request, reply) => {
+      const { auditLogService } = await import('../services/audit-log.service.js');
+      const logs = await auditLogService.getRecentLogs(50);
+      return reply.send({
+        success: true,
+        count: logs.length,
+        logs,
+      });
+    }
+  );
 }
