@@ -2197,6 +2197,8 @@ export function renderDashboardHtml(): string {
             qrMsg.innerText = 'Initializing QR code for ' + activeSessionId + '...';
           }
           if (reconnectBtn) reconnectBtn.style.display = 'inline-flex';
+        }
+
         // Update RBAC status badge and form fields
         // Sync RBAC status across dashboard indicators without wiping user uncommitted edits
         const rbacLbl = document.getElementById('tbl-rbac-mode');
